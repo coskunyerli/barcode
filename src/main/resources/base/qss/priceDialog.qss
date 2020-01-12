@@ -1,0 +1,34 @@
+QFrame {
+    border: 1px solid #606060;
+    border-radius: 8px;
+}
+
+QLabel {
+    font-size: 14pt;
+    color: gray;
+    padding: 8px;
+    border-radius: 0px;
+    border: none;
+}
+
+#barcodeLabel {
+    background-color: #454545;
+    color: #AAAAAA;
+}
+
+#productLabel {
+    background-color: #454545;
+    color: #AAAAAA;
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+#barcodeLineEdit {
+    padding-left: 8px;
+    border-radius: 4px;
+    background-color: white;
+}
+
+#lineItem {
+    background-color: red;
+}
