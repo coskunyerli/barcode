@@ -1,3 +1,4 @@
+import json
 import os
 
 import PySide2.QtCore as QtCore
@@ -30,6 +31,10 @@ class ProductModel(QtCore.QAbstractTableModel):
 		return self.__path
 
 
+	def productModelFilePath(self):
+		return os.path.join(self.path(), self.__filename)
+
+
 	def setPath(self, path):
 		self.__path = path
 
@@ -43,6 +48,7 @@ class ProductModel(QtCore.QAbstractTableModel):
 
 
 	def removeProduct(self, index):
+		# todo buradn silince bütün yerlerden de silmek lazım
 		self.beginRemoveRows(QtCore.QModelIndex(), index.row(), index.row())
 		self.__productList.pop(index.row())
 		self.endRemoveRows()
@@ -77,7 +83,7 @@ class ProductModel(QtCore.QAbstractTableModel):
 	def getIndex(self, barcode):
 		if barcode in self.__productList:
 			index = self.__productList.index(barcode)
-			return self.index(0, index)
+			return self.index(index, 0)
 		else:
 			return QtCore.QModelIndex()
 
@@ -107,8 +113,6 @@ class ProductModel(QtCore.QAbstractTableModel):
 		self.beginResetModel()
 		self.__productList = list
 		self.endResetModel()
-		if self.isSavedEveryUpdate():
-			self.save()
 
 
 	def json(self):
@@ -124,11 +128,24 @@ class ProductModel(QtCore.QAbstractTableModel):
 		if self.path() is not None:
 			try:
 				with open(os.path.join(self.path(), self.__filename), 'w') as file:
-					file.write(self.json())
+					file.write(json.dumps(self.json()))
 			except Exception as e:
 				raise Exception(f'Product model is not saved into file. path is {self.path()}. {e}')
 		else:
 			raise Exception('There is not path to save it')
+
+
+	def load(self):
+		if self.path() is None:
+			raise Exception('There is no path to load')
+		else:
+			try:
+				with open(os.path.join(self.path(), self.__filename)) as file:
+					modelInDict = json.loads(file.read())
+					list_ = ProductModel.fromJson(modelInDict)
+					self.setProductList(list_)
+			except Exception as e:
+				raise Exception(f'Product model is not loaded from file. path is {self.path()}. {e}')
 
 
 	@classmethod
