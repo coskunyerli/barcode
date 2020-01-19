@@ -4,7 +4,6 @@ import log
 from fbs import BarcodeApplicationContext
 import os
 import sys
-import PySide2.QtWidgets as QtWidgets
 import core
 import PySide2.QtWidgets as QtWidgets, PySide2.QtGui as QtGui, PySide2.QtCore as QtCore
 from palette import appPalette
