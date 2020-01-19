@@ -32,3 +32,6 @@ QLabel {
 #lineItem {
     background-color: red;
 }
+QLineEdit{
+    color:black;
+}
