@@ -29,13 +29,14 @@ PushButton{
 
 
 QLineEdit {
-    color: #101010;
+    color: white;
 }
 
 
 #totalPriceTextEdit {
     background-color: #a5a5a5;
     border-radius: 8px;
+    color: #101010;
 }
 
 #totalPriceLabel {
