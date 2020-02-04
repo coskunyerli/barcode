@@ -10,6 +10,10 @@ class SoldProduct(object):
 		self.__date = datetime.datetime.now()
 
 
+	def setProduct(self, product):
+		self.__product = product
+
+
 	def id(self):
 		return self.__product.id()
 
