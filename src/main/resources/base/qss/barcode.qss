@@ -2,8 +2,8 @@ QTableView {
     background-color: #404040;
 }
 
-QTableView::item:selected{
-    background-color: rgb(30,103,213);
+QTableView::item:selected {
+    background-color: rgb(30, 103, 213);
 }
 
 BreadCrumb {
@@ -21,7 +21,7 @@ PushButton:hover {
     background-color: #505050;
 }
 
-PushButton{
+PushButton {
     background-color: #404040;
     padding: 8px;
 
@@ -42,19 +42,25 @@ QLineEdit {
 #totalPriceLabel {
     color: #a5a5a5;
 }
-#topWidget{
+
+#topWidget {
     background-color: #252525;
 }
 
-QInputDialog QSpinBox{
-    color:black;
+QInputDialog QSpinBox {
+    color: black;
 }
 
 InputWidgetGroup QLineEdit {
     background-color: #404040;
     padding-left: 4px;
-    color:white;
+    color: white;
 }
-InputWidgetGroup QLineEdit:disabled{
+
+InputWidgetGroup QLineEdit:disabled {
     background-color: #202020;
+}
+
+#footerWidget {
+    background-color: #252525;
 }
