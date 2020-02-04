@@ -1,4 +1,5 @@
-import PySide2.QtWidgets as QtWidgets, PySide2.QtCore as QtCore
+import PySide2.QtWidgets as QtWidgets, PySide2.QtCore as QtCore, PySide2.QtGui as QtGui
+from model.product import Product
 from widget.toast import Toast
 
 
@@ -38,20 +39,23 @@ class ProductAddDialog(QtWidgets.QDialog):
 		self.purchasePriceLabel = QtWidgets.QLabel(self.priceFrame)
 		self.purchasePriceLabel.setText('Purchase Price')
 		self.purchasePriceLineEdit = QtWidgets.QLineEdit(self.priceFrame)
+		self.purchasePriceLineEdit.setValidator(QtGui.QDoubleValidator())
 
 		self.sellingPriceLabel = QtWidgets.QLabel(self.priceFrame)
 		self.sellingPriceLabel.setText('Selling Price')
 		self.sellingPriceLineEdit = QtWidgets.QLineEdit(self.priceFrame)
+		self.sellingPriceLineEdit.setValidator(QtGui.QDoubleValidator())
 
 		self.profitLabel = QtWidgets.QLabel(self.priceFrame)
-		self.profitLabel.setText('10%')
+		self.profitLabel.setText('')
 		#
 		self.secondSellingPriceLabel = QtWidgets.QLabel(self.priceFrame)
 		self.secondSellingPriceLabel.setText('Second Selling Price')
 		self.secondSellingPriceLineEdit = QtWidgets.QLineEdit(self.priceFrame)
+		self.secondSellingPriceLineEdit.setValidator(QtGui.QDoubleValidator())
 
 		self.secondProfitLabel = QtWidgets.QLabel(self.priceFrame)
-		self.secondProfitLabel.setText('10%')
+		self.secondProfitLabel.setText('')
 
 		self.priceFrameLayout.addWidget(self.vatLabel, 0, 0)
 		self.priceFrameLayout.addWidget(self.vatLineEdit, 0, 1)
@@ -87,7 +91,7 @@ class ProductAddDialog(QtWidgets.QDialog):
 		self.mainLayout.addWidget(self.saveButton)
 
 		self.mainLayout.addItem(
-			QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding))
+				QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding))
 
 		self.initSignalsAndSlots()
 
@@ -98,8 +102,43 @@ class ProductAddDialog(QtWidgets.QDialog):
 	def initSignalsAndSlots(self):
 		self.productButton.clicked.connect(self.__openProductDialog)
 		self.newProductButton.clicked.connect(lambda: self.setProduct(None))
-		self.barcodeLineEdit.editingFinished.connect(self.__changeCurrentProduct)
 		self.saveButton.clicked.connect(self.__addOrUpdateProduct)
+
+		self.barcodeLineEdit.editingFinished.connect(self.__changeCurrentProduct)
+
+		self.sellingPriceLineEdit.textChanged.connect(self.__updateFirstProfit)
+		self.secondSellingPriceLineEdit.textChanged.connect(self.__updateSecondProfit)
+		self.purchasePriceLineEdit.textChanged.connect(self.__updateProfit)
+
+
+	def __updateProfit(self):
+		self.__updateFirstProfit(self.sellingPriceLineEdit.text())
+		self.__updateSecondProfit(self.secondSellingPriceLineEdit.text())
+
+
+	def __updateSecondProfit(self, text):
+		if not text:
+			return
+		try:
+			sellingPrice = float(text)
+			purchasePrice = float(self.purchasePriceLineEdit.text())
+			profit = str(round((100 * sellingPrice / purchasePrice) - 100, 2))
+			self.secondProfitLabel.setText(f'{profit}%')
+		except Exception as e:
+			Toast.warning('Profit', 'Second Profit is not calculated properly', self.parent())
+
+
+	def __updateFirstProfit(self, text):
+		if not text:
+			return
+		try:
+			sellingPrice = float(text)
+			purchasePrice = float(self.purchasePriceLineEdit.text())
+
+			profit = str(round((100 * sellingPrice / purchasePrice) - 100, 2))
+			self.profitLabel.setText(f'{profit}%')
+		except Exception as e:
+			Toast.warning('Profit', 'Profit is not calculated properly', self.parent())
 
 
 	def __openProductDialog(self):
@@ -116,25 +155,35 @@ class ProductAddDialog(QtWidgets.QDialog):
 
 
 	def __initProduct(self, product):
+		self.sellingPriceLineEdit.textChanged.disconnect(self.__updateFirstProfit)
+		self.secondSellingPriceLineEdit.textChanged.disconnect(self.__updateSecondProfit)
+		self.purchasePriceLineEdit.textChanged.disconnect(self.__updateProfit)
 		if product is not None:
 			self.barcodeLineEdit.setText(product.id())
 			self.productNameLineEdit.setText(product.name())
-			self.purchasePriceLineEdit.setText(product.purchasePrice())
-			self.sellingPriceLineEdit.setText(product.sellingPrice())
-			self.vatLineEdit.setText(product.valueAddedTax())
+			self.purchasePriceLineEdit.setText(str(product.purchasePrice()))
+			self.sellingPriceLineEdit.setText(str(product.sellingPrice()))
+			self.secondSellingPriceLineEdit.setText(str(product.secondSellingPrice()))
+			self.vatLineEdit.setText(str(product.valueAddedTax()))
+			self.__updateProfit()
 		else:
 			self.barcodeLineEdit.setText('')
 			self.productNameLineEdit.setText('')
 			self.purchasePriceLineEdit.setText('')
 			self.sellingPriceLineEdit.setText('')
 			self.vatLineEdit.setText('')
+			self.secondSellingPriceLineEdit.setText('')
+
+		self.sellingPriceLineEdit.textChanged.connect(self.__updateFirstProfit)
+		self.secondSellingPriceLineEdit.textChanged.connect(self.__updateSecondProfit)
+		self.purchasePriceLineEdit.textChanged.connect(self.__updateProfit)
 
 
 	def __changeCurrentProduct(self):
 		barcode = self.barcodeLineEdit.text()
 		product = self.__model.getData(barcode)
-		if product is not None:
-			self.__initProduct(product)
+		self.setProduct(product)
+		self.barcodeLineEdit.setText(barcode)
 
 
 	def product(self):
@@ -146,15 +195,30 @@ class ProductAddDialog(QtWidgets.QDialog):
 		self.__initProduct(product)
 
 
+	def show(self):
+		self.barcodeLineEdit.setFocus()
+		super(ProductAddDialog, self).show()
+
+
 	def __addOrUpdateProduct(self):
+		# todo ekmek de sorun var farklı bir id ile kaydediyor ona bak bir.
 		try:
 			barcode = self.barcodeLineEdit.text()
 			index = self.__model.getIndex(barcode)
 			if index.isValid() is True:
 				index.model().setData(index, self.__updateProductValue)
+				Toast.success('Product Edit', 'Product is updated successfully', self.parent())
 			else:
-				# add data
-				pass
+				barcode = self.barcodeLineEdit.text()
+				name = self.productNameLineEdit.text()
+				purchasePrice = float(self.purchasePriceLineEdit.text())
+				sellingPrice = float(self.sellingPriceLineEdit.text())
+				secondSellingPrice = float(self.secondSellingPriceLineEdit.text())
+				valueTaxAdded = float(self.vatLineEdit.text())
+				product = Product(barcode, name, str(purchasePrice), str(sellingPrice), secondSellingPrice, None,
+								  str(valueTaxAdded))
+				self.__model.addProduct(product)
+				Toast.success('Product Add', 'New product is added successfully', self.parent())
 		except Exception as e:
 			print(f'Product is not added or updated successfully. Exception is {e}')
 			Toast.error('Update Error', 'Product is not added or updated successfully', self.parent())
@@ -163,5 +227,15 @@ class ProductAddDialog(QtWidgets.QDialog):
 
 
 	def __updateProductValue(self, product):
-		pass
+		name = self.productNameLineEdit.text()
+		purchasePrice = float(self.purchasePriceLineEdit.text())
+		sellingPrice = float(self.sellingPriceLineEdit.text())
+		valueTaxAdded = float(self.vatLineEdit.text())
+		secondSellingPrice = float(self.secondSellingPriceLineEdit.text())
+
+		product.setName(name)
+		product.setSellingPrice(sellingPrice)
+		product.setPurchasePrice(purchasePrice)
+		product.setValueAddedTax(valueTaxAdded)
+		product.setSecondSellingPrice(secondSellingPrice)
 		return True
