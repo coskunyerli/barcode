@@ -16,6 +16,7 @@ from widget.dialog.oldReceiptDialog import OldReceiptDialog
 from widget.dialog.priceDialog import PriceDialog
 from widget.dialog.productAddDialog import ProductAddDialog
 from widget.dialog.productListDialog import ProductListDialog
+from widget.footerWidget import FooterWidget
 from widget.inputWidgetGroup import InputWidgetGroup
 from widget.pushButton import PushButton
 from widget.toast import Toast
@@ -114,10 +115,14 @@ class MainWidget(QtWidgets.QWidget):
 		self.totalPriceWidgetLayout.addWidget(self.totalPriceLabel)
 		self.totalPriceWidgetLayout.addWidget(self.totalPriceTextEdit)
 
+		self.footerWidget = FooterWidget(self)
+		self.footerWidget.setObjectName('footerWidget')
+
 		self.mainLayout.addWidget(self.topWidget)
 		self.mainLayout.addWidget(self.inputWidgetGroup)
 		self.mainLayout.addWidget(self.centralWidget)
 		self.mainLayout.addWidget(self.totalPriceWidget)
+		self.mainLayout.addWidget(self.footerWidget)
 
 		self.productModel = ProductModel()
 		path = core.fbs.get_resource('product')
@@ -176,6 +181,7 @@ class MainWidget(QtWidgets.QWidget):
 	def addProductProduct(self, product = None):
 		self.productAddDialog.setProduct(product)
 		self.productAddDialog.show()
+		self.productAddDialog.raise_()
 
 
 	def showProductList(self):
@@ -271,7 +277,7 @@ class MainWidget(QtWidgets.QWidget):
 			distinct = False
 			product = self.productModel.getData(barcode)
 		if product is not None:
-			soldProduct = SoldProduct(product, self.inputWidgetGroup.amount())
+			soldProduct = SoldProduct(product.copy(), self.inputWidgetGroup.amount())
 			if soldProduct.totalPrice() != 0:
 				self.currentSoldProductModel().addProduct(soldProduct, distinct)
 			else:
@@ -282,10 +288,12 @@ class MainWidget(QtWidgets.QWidget):
 
 	def showProductDialog(self):
 		self.productDialog.show()
+		self.productDialog.raise_()
 
 
 	def __showPriceDialog(self):
 		self.priceDialog.show()
+		self.priceDialog.raise_()
 
 
 	def __updateSoldProductModel(self, index):
@@ -295,7 +303,7 @@ class MainWidget(QtWidgets.QWidget):
 
 
 	def __addModelToBreadCrumbItem(self, itemData):
-		model = SoldProductModel()
+		model = SoldProductModel(self.productModel)
 		model.totalPriceChanged.connect(self.__updateTotalPriceLabel)
 		itemData.setModel(model)
 
