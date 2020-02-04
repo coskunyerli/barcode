@@ -15,6 +15,15 @@ class ProductListDialog(QtWidgets.QDialog):
 		self.proxyModel.setSourceModel(model)
 
 		self.mainLayout = QtWidgets.QVBoxLayout(self)
+		self.mainLayout.setContentsMargins(8,8,8,8)
+
+		self.productListLabel = QtWidgets.QLabel(self)
+		self.productListLabel.setText('Product List')
+		font = self.productListLabel.font()
+		font.setPointSize(36)
+		self.productListLabel.setFont(font)
+		self.productListLabel.setAlignment(QtCore.Qt.AlignCenter)
+
 		self.productTableView = QtWidgets.QTableView(self)
 		self.productTableView.setVerticalScrollMode(QtWidgets.QAbstractItemView.ScrollPerItem)
 		self.productTableView.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
@@ -54,6 +63,7 @@ class ProductListDialog(QtWidgets.QDialog):
 		spacerItem = QtWidgets.QSpacerItem(3, 3, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
 		self.footerWidgetLayout.addItem(spacerItem)
 
+		self.mainLayout.addWidget(self.productListLabel)
 		self.mainLayout.addWidget(self.productTableView)
 		self.mainLayout.addWidget(self.searchWidget)
 		self.mainLayout.addWidget(self.footerWidget)
@@ -61,6 +71,13 @@ class ProductListDialog(QtWidgets.QDialog):
 		self.searchLineEdit.editingFinished.connect(self.__searchTextChanged)
 
 		self.searchLineEdit.setFocus()
+
+		model.modelReset.connect(self.modelReset)
+		model.rowsInserted.connect(self.modelReset)
+
+
+	def modelReset(self):
+		self.totalProductLabel.setText(str(self.proxyModel.sourceModel().rowCount()))
 
 
 	def __searchTextChanged(self):
