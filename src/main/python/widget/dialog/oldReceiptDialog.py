@@ -10,9 +10,15 @@ class OldReceiptDialog(QtWidgets.QDialog):
 		self.resize(800, 300)
 
 		self.verticalLayout = QtWidgets.QVBoxLayout(self)
-		self.verticalLayout.setContentsMargins(0, 0, 0, 0)
-		self.verticalLayout.setSpacing(0)
-		self.nameLabel = QtWidgets.QLabel(self)
+		self.verticalLayout.setContentsMargins(8, 4, 8, 2)
+		self.verticalLayout.setSpacing(4)
+
+		self.productListLabel = QtWidgets.QLabel(self)
+		self.productListLabel.setText('Sold Products')
+		font = self.productListLabel.font()
+		font.setPointSize(24)
+		self.productListLabel.setFont(font)
+		self.productListLabel.setAlignment(QtCore.Qt.AlignCenter)
 
 		self.soldProductLabelView = QtWidgets.QTableView(self)
 
@@ -47,10 +53,10 @@ class OldReceiptDialog(QtWidgets.QDialog):
 		self.priceLabel.setFont(font)
 
 		self.infoWidgetLayout.addItem(
-			QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum))
+				QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum))
 		self.infoWidgetLayout.addWidget(self.priceLabel)
 
-		self.verticalLayout.addWidget(self.nameLabel)
+		self.verticalLayout.addWidget(self.productListLabel)
 		self.verticalLayout.addWidget(self.soldProductLabelView)
 		self.verticalLayout.addWidget(self.infoWidget)
 		self.__dailySoldProduct = None
