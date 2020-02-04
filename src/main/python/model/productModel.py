@@ -16,7 +16,8 @@ class ProductModel(QtCore.QAbstractTableModel):
 		self.__isSavedEveryUpdate = False
 		self.__filename = '.product.lst'
 		self.__productList = DictList()
-		self.__headerData = ['Barcode', 'Name', 'Price', 'Purchase Price', 'Kind', 'Value Added Tax', 'Sale Amount']
+		self.__headerData = ['Barcode', 'Name', 'Price', 'Purchase Price', 'Second Price', 'Kind', 'Value Added Tax',
+							 'Sale Amount']
 
 
 	def isSavedEveryUpdate(self):
@@ -73,7 +74,8 @@ class ProductModel(QtCore.QAbstractTableModel):
 			return None
 		if role == QtCore.Qt.DisplayRole:
 			product = self.__productList[index.row()]
-			data = [product.id(), product.name(), product.sellingPrice(), product.purchasePrice(), product.kind(),
+			data = [product.id(), product.name(), product.sellingPrice(), product.purchasePrice(),
+					product.secondSellingPrice(), product.kind(),
 					product.valueAddedTax(), product.saleAmount()]
 			return data[index.column()]
 		elif role == QtCore.Qt.UserRole:
@@ -100,7 +102,7 @@ class ProductModel(QtCore.QAbstractTableModel):
 		return False
 
 
-	def headerData(self, section, orientation, role):
+	def headerData(self, section, orientation, role = QtCore.Qt.DisplayRole):
 		if orientation == QtCore.Qt.Horizontal:
 			if role == QtCore.Qt.DisplayRole:
 				return self.__headerData[section]
@@ -139,18 +141,19 @@ class ProductModel(QtCore.QAbstractTableModel):
 		if self.path() is None:
 			raise Exception('There is no path to load')
 		else:
-			try:
-				with open(os.path.join(self.path(), self.__filename)) as file:
-					modelInDict = json.loads(file.read())
-					list_ = ProductModel.fromJson(modelInDict)
+			with open(os.path.join(self.path(), self.__filename)) as file:
+				modelInDict = json.loads(file.read())
+				list_ = ProductModel.fromJson(modelInDict)
+				if list_ is not None:
 					self.setProductList(list_)
-			except Exception as e:
-				raise Exception(f'Product model is not loaded from file. path is {self.path()}. {e}')
+				else:
+					raise Exception(f'Product model is not loaded from file. path is {self.path()}.')
 
 
 	@classmethod
 	def fromJson(cls, json_):
 		productList = DictList()
+		productInDict = None
 		try:
 			for productInDict in json_:
 				product = Product.fromDict(productInDict)
@@ -158,5 +161,5 @@ class ProductModel(QtCore.QAbstractTableModel):
 
 			return productList
 		except Exception as e:
-			log.error(f'Model is not created successfully from dict data. Data is {json_}. {e}')
+			log.error(f'Model is not created successfully from dict data. Data is {productInDict}. {e}')
 			return None
