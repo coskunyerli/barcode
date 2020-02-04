@@ -85,6 +85,7 @@ class ProductListDialog(QtWidgets.QDialog):
 				QtCore.QRegExp(self.searchLineEdit.text(), QtCore.Qt.CaseInsensitive, QtCore.QRegExp.FixedString))
 
 		self.currentProductNumberLabel.setText(str(self.proxyModel.rowCount()))
+		self.searchLineEdit.selectAll()
 
 
 	def __showPopup(self, pos):
