@@ -10,12 +10,26 @@ class SoldProductModel(QtCore.QAbstractTableModel):
 	totalPriceChanged = QtCore.Signal(float)
 
 
-	def __init__(self):
+	def __init__(self, productModel = None):
 		super(SoldProductModel, self).__init__()
 		self.__productList = []
 		self.__headerData = ['Barcode', 'Name', 'Amount', 'Price', 'Total Price']
 		self.__date = datetime.datetime.now()
 		self.__readOnly = False
+		self.__productModel = productModel
+		if self.__productModel is not None:
+			self.__productModel.dataChanged.connect(self.__updateProductItems)
+
+
+	def __updateProductItems(self, left, right):
+		if self.__productModel is not None:
+			changedProduct = left.data(QtCore.Qt.UserRole)
+			soldProduct = static.first_(lambda sProduct: sProduct.id() == changedProduct.id(),
+										self.__productList)
+			if soldProduct is not None:
+				soldProduct.setProduct(changedProduct.copy())
+			self.totalPriceChanged.emit(self.totalPrice())
+			self.dataChanged.emit(QtCore.QModelIndex(), QtCore.QModelIndex())
 
 
 	def setReadOnly(self, res):
@@ -42,7 +56,7 @@ class SoldProductModel(QtCore.QAbstractTableModel):
 				self.totalPriceChanged.emit(self.totalPrice())
 				return
 
-		self.beginInsertRows(QtCore.QModelIndex(), len(self.__productList), len(self.__productList))
+		self.beginInsertRows(QtCore.QModelIndex(), self.rowCount(), self.rowCount())
 		self.__productList.append(product)
 		self.endInsertRows()
 		self.totalPriceChanged.emit(self.totalPrice())
@@ -117,7 +131,7 @@ class SoldProductModel(QtCore.QAbstractTableModel):
 
 	def clear(self):
 		self.beginResetModel()
-		self.__productList = DictList()
+		self.__productList = []
 		self.totalPriceChanged.emit(0)
 		self.endResetModel()
 
