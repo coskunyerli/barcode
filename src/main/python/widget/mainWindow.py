@@ -1,11 +1,10 @@
+import os
 from datetime import date
 import PySide2.QtCore as QtCore, PySide2.QtWidgets as QtWidgets, PySide2.QtGui as QtGui
-import core
 import log
 
 from model.dictList import DictList
 from model.product import Product
-from model.productModel import ProductModel
 from widget.mainWidget import MainWidget
 from widget.toast import Toast
 
@@ -16,8 +15,10 @@ class MainWindow(QtWidgets.QMainWindow):
 		menubar = self.menuBar()
 		menu = QtWidgets.QMenu('File')
 		self.importCsvAction = menu.addAction('Import CSV')
+		self.exportCsvAction = menu.addAction('Export CSV')
 		menubar.addMenu(menu)
 		self.importCsvAction.triggered.connect(self.importCSVFile)
+		self.exportCsvAction.triggered.connect(self.exportCSVFile)
 
 		self.mainWidget = MainWidget(self)
 		self.__date = date.today()
@@ -60,11 +61,15 @@ class MainWindow(QtWidgets.QMainWindow):
 		else:
 			self.__date = date.today()
 
+		# read product model from its path
+		try:
+			productModelPath = self.mainWidget.productModel.productModelFilePath()
+			if productModelPath is not None and os.path.exists(productModelPath):
+				self.mainWidget.productModel.load()
+		except Exception as e:
+			log.error(f'Product model is not loaded from its path successfully. {e}')
+			Toast.error('Product Model Loading Error', 'Product model is not loaded successfully from its file', self)
 
-	# productListInDict = self.settings.value('productModelDict')
-	# if productListInDict is not None:
-	# 	productList = ProductModel.fromJson(productListInDict)
-	# 	self.mainWidget.productModel.setProductList(productList)
 
 	def writeSettings(self):
 		headerSizes = {}
@@ -99,6 +104,14 @@ class MainWindow(QtWidgets.QMainWindow):
 
 		self.settings.setValue('date', self.__date.toordinal())
 
+		# save the product model before close app
+		try:
+			self.mainWidget.productModel.save()
+		except Exception as e:
+			log.error(f'Product model is not saved properly before app is closed. {e}')
+			QtWidgets.QMessageBox.information(None, 'Product Model Saved Error',
+											  'Product model is not saved successfully before closing app')
+
 
 	# productListInDict = self.mainWidget.productModel.json()
 	# self.settings.setValue('productModelDict', productListInDict)
@@ -132,6 +145,26 @@ class MainWindow(QtWidgets.QMainWindow):
 			Toast.error('CSV Import', 'Error occurred while importing CSV file')
 
 
+	def exportCSVFile(self):
+		filename, res = QtWidgets.QFileDialog.getSaveFileName(self, "Export CSV File", '',
+															  "CSV Files(*.csv)")
+		try:
+			if res and filename:
+				_, file_extension = os.path.splitext(filename)
+
+				if file_extension != '.csv':
+					filename = f'{filename}.csv'
+
+				res = self.__exportCSVFile(filename)
+				if res is True:
+					Toast.success('CSV Export', 'Exporting CSV file is done successfully', self)
+				else:
+					Toast.error('CSV Export', 'Invalid file CSV to export', self)
+		except Exception as e:
+			log.error(f'There is an error exporting csv file. File is {filename}. error is {e}')
+			Toast.error('CSV Export', 'Error occurred while exporting CSV file', self)
+
+
 	def __importCSVFile(self, filename):
 		file = QtCore.QFile(filename)
 		if not file.open(QtCore.QIODevice.ReadOnly):
@@ -142,13 +175,16 @@ class MainWindow(QtWidgets.QMainWindow):
 		try:
 			while not file.atEnd():
 				line = str(file.readLine().data(), encoding = 'ISO 8859-9')
+				line = line.upper().replace('İ', 'I')
 				if title:
 					title = False
 				else:
 					productInList = line.split(',')
 
-					product = Product(productInList[1], productInList[3].strip(), productInList[9], productInList[5],
-									  productInList[7], productInList[-1])
+					product = Product(productInList[1], productInList[3].strip(), float(productInList[9]),
+									  float(productInList[5]),
+									  float(productInList[11]),
+									  productInList[7], int(productInList[-1]))
 					if product.id() not in productList:
 						productList.setItem(product.id(), product)
 
@@ -158,3 +194,23 @@ class MainWindow(QtWidgets.QMainWindow):
 			return False
 
 		return True
+
+
+	def __exportCSVFile(self, filename):
+		with open(filename, 'w') as file:
+			try:
+				headers = []
+				for headerIndex in range(self.mainWidget.productModel.columnCount()):
+					headers.append(self.mainWidget.productModel.headerData(headerIndex, QtCore.Qt.Horizontal))
+
+				file.write(f'{",".join(headers)}\n')
+				for i in range(self.mainWidget.productModel.rowCount()):
+					data = []
+					for j in range(self.mainWidget.productModel.columnCount()):
+						index = self.mainWidget.productModel.index(i, j)
+						data.append(str(index.data()))
+					file.write(f'{",".join(data)}\n')
+				return True
+			except Exception as e:
+				log.error(f'Error occurred reading CSV file {filename}. Error is => {e}')
+				return False
