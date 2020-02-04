@@ -1,9 +1,10 @@
 class Product(object):
-	def __init__(self, id, name, purchasePrice, sellingPrice, kind, vat):
+	def __init__(self, id, name, purchasePrice, sellingPrice, secondSellingPrice, kind, vat):
 		self.__id = id
 		self.__name = name
 		self.__purchasePrice = purchasePrice
 		self.__sellingPrice = sellingPrice
+		self.__secondSellingPrice = secondSellingPrice
 		self.__kind = kind
 		self.__vat = vat
 		self.__saleAmount = 0
@@ -11,16 +12,45 @@ class Product(object):
 
 	def dict(self):
 		return {'id': self.id(), 'name': self.name(), 'purchasePrice': self.purchasePrice(),
-				'sellingPrice': self.sellingPrice(), 'kind': self.kind(), 'vat': self.valueAddedTax()}
+				'sellingPrice': self.sellingPrice(), 'secondSellingPrice': self.secondSellingPrice(),
+				'kind': self.kind(), 'vat': self.valueAddedTax()}
 
 
 	@classmethod
 	def fromDict(cls, dict):
+
+		id_ = dict.get('id')
+		name = dict.get('name')
+		purchasePrice = dict.get('purchasePrice')
+		sellingPrice = dict.get('purchasePrice')
+		secondSellingPrice = dict.get('secondSellingPrice')
+		kind = dict.get('kind')
+		vat = dict.get('vat')
+
+		assert isinstance(id_, str), f'Product ID should be string. ID is {id_}. Type is {type(id_)}'
+
+		assert name is not None, f'Product name should not be null. Product name is {name}. Type is {type(name)}'
+
+		assert isinstance(purchasePrice, int) or isinstance(purchasePrice, float), f'Product purchase price should be ' \
+			f'integer or float. Price is {purchasePrice}. Type is {type(purchasePrice)}'
+
+		assert isinstance(sellingPrice, int) or isinstance(sellingPrice, float), f'Product Selling price should be ' \
+			f'integer or float. Price is {sellingPrice}. Type is {type(sellingPrice)}'
+
+		assert isinstance(secondSellingPrice, int) or isinstance(secondSellingPrice, float), f'Product second selling ' \
+			f'price price should be integer or float. Price is {secondSellingPrice}. Type is {type(secondSellingPrice)}'
+
+		assert isinstance(vat, int), f'Value-added-text of product should be integer. Vat is {vat}. Type is {type(vat)}'
+		assert isinstance(kind, str), f'Product kind should be string. Kind is {kind}. Type is {type(type)}'
 		try:
 			product = Product(**dict)
 			return product
 		except Exception as e:
 			raise Exception(f'Product is not created successfully {dict} is not valid. {e}')
+
+
+	def copy(self):
+		return Product.fromDict(self.dict())
 
 
 	def __repr__(self):
@@ -52,6 +82,10 @@ class Product(object):
 		return self.__sellingPrice
 
 
+	def secondSellingPrice(self):
+		return self.__secondSellingPrice
+
+
 	def purchasePrice(self):
 		return self.__purchasePrice
 
@@ -62,6 +96,10 @@ class Product(object):
 			return True
 		else:
 			return False
+
+
+	def setSecondSellingPrice(self, price):
+		self.__secondSellingPrice = price
 
 
 	def setPurchasePrice(self, price):
@@ -130,4 +168,4 @@ class Product(object):
 
 class CustomProduct(Product):
 	def __init__(self, price):
-		super(CustomProduct, self).__init__('0', 'Unknown Product', price, price, None, 18)
+		super(CustomProduct, self).__init__('0', 'Unknown Product', price, price, price, 'Any', 18)
