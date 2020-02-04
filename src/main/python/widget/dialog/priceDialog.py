@@ -5,6 +5,7 @@ from enums import BarcodeType
 from widget.toast import Toast
 import core
 
+
 class PriceDialog(QtWidgets.QDialog):
 	def __init__(self, model, parent = None):
 		super(PriceDialog, self).__init__(parent)
@@ -49,7 +50,7 @@ class PriceDialog(QtWidgets.QDialog):
 		self.priceWidgetLayout = QtWidgets.QHBoxLayout(self.priceWidget)
 		self.priceWidgetLayout.setContentsMargins(0, 5, 0, 0)
 		self.priceWidgetLayout.addItem(
-			QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum))
+				QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum))
 
 		self.priceLabel = QtWidgets.QLineEdit(self)
 		self.priceLabel.setObjectName('totalPriceTextEdit')
@@ -82,13 +83,27 @@ class PriceDialog(QtWidgets.QDialog):
 		self.closeProductShortcut.setKey(QtGui.QKeySequence(QtCore.Qt.Key_F4))
 		self.closeProductShortcut.activated.connect(self.close)
 
-
 		qssPath = core.fbs.get_resource(os.path.join('qss', 'priceDialog.qss'))
 		try:
 			qssFile = open(qssPath)
 			self.setStyleSheet(qssFile.read())
 		except Exception as e:
-			print('Error occurred while loading qss file path is %s, Error is => %s' % (qssPath,str(e)))
+			print('Error occurred while loading qss file path is %s, Error is => %s' % (qssPath, str(e)))
+
+		self.__model.dataChanged.connect(self.__updateProductPrice)
+
+
+	def __updateProductPrice(self):
+		barcode = self.barcodeLabel.text()
+		product = self.__model.getData(barcode)
+		if product is not None:
+			self.barcodeLabel.setText(product.id())
+			self.productNameLabel.setText(product.name())
+			totalPrice = product.sellingPrice()
+			price = '%.2f₺' % float(totalPrice)
+			width = self.priceLabel.fontMetrics().width(price)
+			self.priceLabel.setText(price)
+			self.priceLabel.setFixedWidth(width + 20)
 
 
 	def __updatePriceLabel(self):
@@ -112,4 +127,4 @@ class PriceDialog(QtWidgets.QDialog):
 		else:
 			Toast.warning('Product Warning', 'Product does not exist', self.parent())
 
-		self.barcodeLineEdit.clear()
+		self.barcodeLineEdit.selectAll()
