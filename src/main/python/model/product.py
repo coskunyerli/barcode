@@ -7,16 +7,6 @@ class Product(object):
 		self.__secondSellingPrice = secondSellingPrice
 		self.__kind = kind
 		self.__vat = vat
-		self.__unit = 'ad'
-
-
-	def unit(self):
-		return self.__unit
-
-
-	def setUnit(self, unit):
-		self.__unit = unit
-
 
 	def dict(self):
 		return {'id': self.id(), 'name': self.name(), 'purchasePrice': self.purchasePrice(),
@@ -159,22 +149,6 @@ class Product(object):
 
 	def profitRate(self):
 		return self.profit() / self.purchasePrice() * 100
-
-
-class WeighableProduct(Product):
-	def __init__(self, id, name, purchasePrice, sellingPrice, secondSellingPrice, kind, vat):
-		super(WeighableProduct, self).__init__(id, name, purchasePrice, sellingPrice, secondSellingPrice, kind, vat)
-		self.setUnit('gr')
-
-
-	@classmethod
-	def amount(self, barcode):
-		amountInString = barcode[-5:-1]
-		if amountInString.isdigit():
-			amount = int(amountInString)
-		else:
-			amount = 1
-		return amount
 
 
 class CustomProduct(Product):

@@ -64,11 +64,8 @@ class ProductModel(QtCore.QAbstractTableModel):
 		return len(self.__headerData)
 
 
-	def productType(self, id):
-		if id[0:2] == '27':
-			return ProductType.WEIGHABLE
-		else:
-			return ProductType.REGULAR
+	def productType(self, barcode):
+		return ProductType.productType(barcode)
 
 
 	def __barcode(self, barcode):
@@ -142,7 +139,8 @@ class ProductModel(QtCore.QAbstractTableModel):
 
 	def __preProcessBeforeSetList(self, productList):
 		localProductList = []
-		for product in productList:
+		for key in productList:
+			product = productList[key]
 			localProduct = product.copy()
 			localProduct.setID(self.__barcode(product.id()))
 			localProductList.append(localProduct)

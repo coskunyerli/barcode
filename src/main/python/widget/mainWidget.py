@@ -1,14 +1,12 @@
-import os
-
 import PySide2.QtCore as QtCore, PySide2.QtWidgets as QtWidgets, PySide2.QtGui as QtGui
 import core
 
 from enums import BarcodeType, ProductType
 from event.eventFilterObject import EventFilterForTableView
 from model.dailyReceiptModel import DailyReceiptModel
-from model.product import CustomProduct, WeighableProduct
+from model.product import CustomProduct
 from model.productModel import ProductModel
-from model.soldProduct import SoldProduct
+from model.soldProduct import SoldProduct, WeighableSoldProduct
 from model.soldProductModel import SoldProductModel
 
 from widget.breadCrumb import BreadCrumb, ModelBreadCrumbData
@@ -278,10 +276,9 @@ class MainWidget(QtWidgets.QWidget):
 			product = self.productModel.getProductWithBarcode(barcode)
 		if product is not None:
 			if self.productModel.productType(barcode) == ProductType.WEIGHABLE:
-				amount = WeighableProduct.amount(barcode)
+				soldProduct = WeighableSoldProduct(product.copy())
 			else:
-				amount = self.inputWidgetGroup.amount()
-			soldProduct = SoldProduct(product.copy(), amount)
+				soldProduct = SoldProduct(product.copy(), self.inputWidgetGroup.amount())
 			if soldProduct.totalPrice() != 0:
 				self.currentSoldProductModel().addProduct(soldProduct, distinct)
 			else:

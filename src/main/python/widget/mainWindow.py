@@ -112,6 +112,7 @@ class MainWindow(QtWidgets.QMainWindow):
 			QtWidgets.QMessageBox.information(None, 'Product Model Saved Error',
 											  'Product model is not saved successfully before closing app')
 
+
 	def closeEvent(self, event):
 		self.cleanupBeforeClose()
 		super(MainWindow, self).closeEvent(event)
@@ -138,7 +139,7 @@ class MainWindow(QtWidgets.QMainWindow):
 					Toast.error('CSV Import', 'Invalid file CSV to import')
 		except Exception as e:
 			log.error(f'There is an error importing csv file. File is {filename}. error is {e}')
-			Toast.error('CSV Import', 'Error occurred while importing CSV file')
+			# Toast.error('CSV Import', 'Error occurred while importing CSV file', self)
 
 
 	def exportCSVFile(self):

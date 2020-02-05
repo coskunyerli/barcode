@@ -8,6 +8,15 @@ class SoldProduct(object):
 		self.__product = product
 		self.__amount = amount
 		self.__date = datetime.datetime.now()
+		self.__unit = 'number'
+
+
+	def unit(self):
+		return self.__unit
+
+
+	def setUnit(self, unit):
+		self.__unit = unit
 
 
 	def setProduct(self, product):
@@ -59,3 +68,21 @@ class SoldProduct(object):
 		soldProduct = SoldProduct(product, dict['amount'])
 		soldProduct.__date = datetime.datetime.fromtimestamp(dict['date'])
 		return soldProduct
+
+
+class WeighableSoldProduct(SoldProduct):
+
+	def __init__(self, product):
+		amount = WeighableSoldProduct.__amount(product.id())
+		super(WeighableSoldProduct, self).__init__(product, amount)
+		self.setUnit('gr')
+
+
+	@classmethod
+	def __amount(cls, barcode):
+		amountInString = barcode[-5:-1]
+		if amountInString.isdigit():
+			amount = int(amountInString)
+		else:
+			amount = 1
+		return amount
