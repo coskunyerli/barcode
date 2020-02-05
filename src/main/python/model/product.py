@@ -7,7 +7,15 @@ class Product(object):
 		self.__secondSellingPrice = secondSellingPrice
 		self.__kind = kind
 		self.__vat = vat
-		self.__saleAmount = 0
+		self.__unit = 'ad'
+
+
+	def unit(self):
+		return self.__unit
+
+
+	def setUnit(self, unit):
+		self.__unit = unit
 
 
 	def dict(self):
@@ -32,13 +40,13 @@ class Product(object):
 		assert name is not None, f'Product name should not be null. Product name is {name}. Type is {type(name)}'
 
 		assert isinstance(purchasePrice, int) or isinstance(purchasePrice, float), f'Product purchase price should be ' \
-			f'integer or float. Price is {purchasePrice}. Type is {type(purchasePrice)}'
+																				   f'integer or float. Price is {purchasePrice}. Type is {type(purchasePrice)}'
 
 		assert isinstance(sellingPrice, int) or isinstance(sellingPrice, float), f'Product Selling price should be ' \
-			f'integer or float. Price is {sellingPrice}. Type is {type(sellingPrice)}'
+																				 f'integer or float. Price is {sellingPrice}. Type is {type(sellingPrice)}'
 
 		assert isinstance(secondSellingPrice, int) or isinstance(secondSellingPrice, float), f'Product second selling ' \
-			f'price price should be integer or float. Price is {secondSellingPrice}. Type is {type(secondSellingPrice)}'
+																							 f'price price should be integer or float. Price is {secondSellingPrice}. Type is {type(secondSellingPrice)}'
 
 		assert isinstance(vat, int), f'Value-added-text of product should be integer. Vat is {vat}. Type is {type(vat)}'
 		assert isinstance(kind, str), f'Product kind should be string. Kind is {kind}. Type is {type(type)}'
@@ -58,9 +66,8 @@ class Product(object):
 
 
 	def __str__(self):
-		return 'Product(%s,%s,%s,%s,%s,%s %s)' % (
-			self.id(), self.name(), self.purchasePrice(), self.sellingPrice(), self.kind(), self.valueAddedTax(),
-			self.saleAmount())
+		return 'Product(%s,%s,%s,%s,%s,%s)' % (
+			self.id(), self.name(), self.purchasePrice(), self.sellingPrice(), self.kind(), self.valueAddedTax())
 
 
 	# self.__stockLevel = stockLevel
@@ -126,18 +133,6 @@ class Product(object):
 			return False
 
 
-	def setSaleAmount(self, value):
-		if self.__saleAmount != value:
-			self.__saleAmount = value
-			return True
-		else:
-			return False
-
-
-	def saleAmount(self):
-		return self.__saleAmount
-
-
 	def id(self):
 		return self.__id
 
@@ -164,6 +159,22 @@ class Product(object):
 
 	def profitRate(self):
 		return self.profit() / self.purchasePrice() * 100
+
+
+class WeighableProduct(Product):
+	def __init__(self, id, name, purchasePrice, sellingPrice, secondSellingPrice, kind, vat):
+		super(WeighableProduct, self).__init__(id, name, purchasePrice, sellingPrice, secondSellingPrice, kind, vat)
+		self.setUnit('gr')
+
+
+	@classmethod
+	def amount(self, barcode):
+		amountInString = barcode[-5:-1]
+		if amountInString.isdigit():
+			amount = int(amountInString)
+		else:
+			amount = 1
+		return amount
 
 
 class CustomProduct(Product):

@@ -10,7 +10,7 @@ from widget.toast import Toast
 
 
 class MainWindow(QtWidgets.QMainWindow):
-	def __init__(self, parent = None):
+	def __init__(self, parent=None):
 		super(MainWindow, self).__init__(parent)
 		menubar = self.menuBar()
 		menu = QtWidgets.QMenu('File')
@@ -55,9 +55,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
 		self.mainWidget.dailySoldProduct.read()
 
-		date_ = int(self.settings.value('date'))
+		date_ = self.settings.value('date')
 		if date_ is not None:
-			self.__date = date.fromordinal(date_)
+			self.__date = date.fromordinal(int(date_))
 		else:
 			self.__date = date.today()
 
@@ -111,10 +111,6 @@ class MainWindow(QtWidgets.QMainWindow):
 			log.error(f'Product model is not saved properly before app is closed. {e}')
 			QtWidgets.QMessageBox.information(None, 'Product Model Saved Error',
 											  'Product model is not saved successfully before closing app')
-
-
-	# productListInDict = self.mainWidget.productModel.json()
-	# self.settings.setValue('productModelDict', productListInDict)
 
 	def closeEvent(self, event):
 		self.cleanupBeforeClose()

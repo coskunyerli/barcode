@@ -3,6 +3,7 @@ import os
 
 import PySide2.QtCore as QtCore
 import log
+from enums import ProductType
 
 from model.dictList import DictList
 from model.product import Product
@@ -10,14 +11,13 @@ from model.product import Product
 
 class ProductModel(QtCore.QAbstractTableModel):
 
-	def __init__(self, path = None):
+	def __init__(self, path=None):
 		super(ProductModel, self).__init__()
 		self.__path = path
 		self.__isSavedEveryUpdate = False
 		self.__filename = '.product.lst'
 		self.__productList = DictList()
-		self.__headerData = ['Barcode', 'Name', 'Price', 'Purchase Price', 'Second Price', 'Kind', 'Value Added Tax',
-							 'Sale Amount']
+		self.__headerData = ['Barcode', 'Name', 'Price', 'Purchase Price', 'Second Price', 'Kind', 'Value Added Tax']
 
 
 	def isSavedEveryUpdate(self):
@@ -42,7 +42,10 @@ class ProductModel(QtCore.QAbstractTableModel):
 
 	def addProduct(self, product):
 		self.beginInsertRows(QtCore.QModelIndex(), self.rowCount(), self.rowCount())
-		self.__productList.setItem(product.id(), product)
+		localBarcode = self.__barcode(product.id())
+		localProduct = product.copy()
+		localProduct.setID(localBarcode)
+		self.__productList.setItem(localBarcode, localProduct)
 		self.endInsertRows()
 		if self.isSavedEveryUpdate():
 			self.save()
@@ -57,32 +60,52 @@ class ProductModel(QtCore.QAbstractTableModel):
 			self.save()
 
 
-	def columnCount(self, index = QtCore.QModelIndex()):
+	def columnCount(self, index=QtCore.QModelIndex()):
 		return len(self.__headerData)
 
 
-	def getData(self, id):
-		return self.__productList[id]
+	def productType(self, id):
+		if id[0:2] == '27':
+			return ProductType.WEIGHABLE
+		else:
+			return ProductType.REGULAR
 
 
-	def rowCount(self, index = QtCore.QModelIndex()):
+	def __barcode(self, barcode):
+		# convert barcode to local value
+		if self.productType(barcode) == ProductType.WEIGHABLE:
+			return ProductType.convertWeighableBarcode(barcode)
+		else:
+			return barcode
+
+
+	def getProductWithBarcode(self, barcode):
+		localBarcode = self.__barcode(barcode)
+
+		return self.__productList[localBarcode]
+
+
+	def rowCount(self, index=QtCore.QModelIndex()):
 		return len(self.__productList)
 
 
-	def data(self, index, role = QtCore.Qt.DisplayRole):
+	def data(self, index, role=QtCore.Qt.DisplayRole):
 		if index.isValid() is False:
 			return None
 		if role == QtCore.Qt.DisplayRole:
 			product = self.__productList[index.row()]
 			data = [product.id(), product.name(), product.sellingPrice(), product.purchasePrice(),
 					product.secondSellingPrice(), product.kind(),
-					product.valueAddedTax(), product.saleAmount()]
+					product.valueAddedTax()]
 			return data[index.column()]
 		elif role == QtCore.Qt.UserRole:
 			return self.__productList[index.row()]
 
 
-	def getIndex(self, barcode):
+	def getIndexWithBarcode(self, barcode):
+		# convert local barcode
+		barcode = self.__barcode(barcode)
+
 		if barcode in self.__productList:
 			index = self.__productList.index(barcode)
 			return self.index(index, 0)
@@ -90,7 +113,7 @@ class ProductModel(QtCore.QAbstractTableModel):
 			return QtCore.QModelIndex()
 
 
-	def setData(self, index, func, role = QtCore.Qt.EditRole):
+	def setData(self, index, func, role=QtCore.Qt.EditRole):
 		if index.isValid() is False:
 			return False
 		item = self.data(index, QtCore.Qt.UserRole)
@@ -102,7 +125,7 @@ class ProductModel(QtCore.QAbstractTableModel):
 		return False
 
 
-	def headerData(self, section, orientation, role = QtCore.Qt.DisplayRole):
+	def headerData(self, section, orientation, role=QtCore.Qt.DisplayRole):
 		if orientation == QtCore.Qt.Horizontal:
 			if role == QtCore.Qt.DisplayRole:
 				return self.__headerData[section]
@@ -113,8 +136,17 @@ class ProductModel(QtCore.QAbstractTableModel):
 
 	def setProductList(self, list):
 		self.beginResetModel()
-		self.__productList = list
+		self.__productList = self.__preProcessBeforeSetList(list)
 		self.endResetModel()
+
+
+	def __preProcessBeforeSetList(self, productList):
+		localProductList = []
+		for product in productList:
+			localProduct = product.copy()
+			localProduct.setID(self.__barcode(product.id()))
+			localProductList.append(localProduct)
+		return localProductList
 
 
 	def json(self):

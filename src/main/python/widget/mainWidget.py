@@ -3,10 +3,10 @@ import os
 import PySide2.QtCore as QtCore, PySide2.QtWidgets as QtWidgets, PySide2.QtGui as QtGui
 import core
 
-from enums import BarcodeType
+from enums import BarcodeType, ProductType
 from event.eventFilterObject import EventFilterForTableView
 from model.dailyReceiptModel import DailyReceiptModel
-from model.product import CustomProduct
+from model.product import CustomProduct, WeighableProduct
 from model.productModel import ProductModel
 from model.soldProduct import SoldProduct
 from model.soldProductModel import SoldProductModel
@@ -23,7 +23,7 @@ from widget.toast import Toast
 
 
 class MainWidget(QtWidgets.QWidget):
-	def __init__(self, parent = None):
+	def __init__(self, parent=None):
 		super(MainWidget, self).__init__(parent)
 		self.mainLayout = QtWidgets.QVBoxLayout(self)
 		self.mainLayout.setContentsMargins(0, 0, 0, 0)
@@ -178,7 +178,7 @@ class MainWidget(QtWidgets.QWidget):
 		self.initialize()
 
 
-	def addProductProduct(self, product = None):
+	def addProductProduct(self, product=None):
 		self.productAddDialog.setProduct(product)
 		self.productAddDialog.show()
 		self.productAddDialog.raise_()
@@ -275,9 +275,13 @@ class MainWidget(QtWidgets.QWidget):
 			product = CustomProduct(self.inputWidgetGroup.price())
 		else:
 			distinct = False
-			product = self.productModel.getData(barcode)
+			product = self.productModel.getProductWithBarcode(barcode)
 		if product is not None:
-			soldProduct = SoldProduct(product.copy(), self.inputWidgetGroup.amount())
+			if self.productModel.productType(barcode) == ProductType.WEIGHABLE:
+				amount = WeighableProduct.amount(barcode)
+			else:
+				amount = self.inputWidgetGroup.amount()
+			soldProduct = SoldProduct(product.copy(), amount)
 			if soldProduct.totalPrice() != 0:
 				self.currentSoldProductModel().addProduct(soldProduct, distinct)
 			else:

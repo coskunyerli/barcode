@@ -95,7 +95,7 @@ class PriceDialog(QtWidgets.QDialog):
 
 	def __updateProductPrice(self):
 		barcode = self.barcodeLabel.text()
-		product = self.__model.getData(barcode)
+		product = self.__model.getProductWithBarcode(barcode)
 		if product is not None:
 			self.barcodeLabel.setText(product.id())
 			self.productNameLabel.setText(product.name())
@@ -114,7 +114,7 @@ class PriceDialog(QtWidgets.QDialog):
 		if barcode == BarcodeType.CUSTOM:
 			Toast.warning('Product Warning', 'Barcode can not be zero', self.parent())
 			return
-		product = self.__model.getData(barcode)
+		product = self.__model.getProductWithBarcode(barcode)
 		if product is not None:
 			self.barcodeLabel.setText(product.id())
 			self.productNameLabel.setText(product.name())

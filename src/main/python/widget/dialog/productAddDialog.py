@@ -181,7 +181,7 @@ class ProductAddDialog(QtWidgets.QDialog):
 
 	def __changeCurrentProduct(self):
 		barcode = self.barcodeLineEdit.text()
-		product = self.__model.getData(barcode)
+		product = self.__model.getProductWithBarcode(barcode)
 		self.setProduct(product)
 		self.barcodeLineEdit.setText(barcode)
 
@@ -204,7 +204,7 @@ class ProductAddDialog(QtWidgets.QDialog):
 		# todo ekmek de sorun var farklı bir id ile kaydediyor ona bak bir.
 		try:
 			barcode = self.barcodeLineEdit.text()
-			index = self.__model.getIndex(barcode)
+			index = self.__model.getIndexWithBarcode(barcode)
 			if index.isValid() is True:
 				index.model().setData(index, self.__updateProductValue)
 				Toast.success('Product Edit', 'Product is updated successfully', self.parent())
