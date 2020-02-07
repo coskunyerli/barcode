@@ -7,7 +7,7 @@ import core
 
 
 class PriceDialog(QtWidgets.QDialog):
-	def __init__(self, model, parent = None):
+	def __init__(self, model, parent=None):
 		super(PriceDialog, self).__init__(parent)
 		self.__model = model
 		self.setFixedWidth(500)
@@ -112,7 +112,7 @@ class PriceDialog(QtWidgets.QDialog):
 			return
 
 		if barcode == BarcodeType.CUSTOM:
-			Toast.warning('Product Warning', 'Barcode can not be zero', self.parent())
+			Toast.warning('Product Warning', 'Barcode can not be zero')
 			return
 		product = self.__model.getProductWithBarcode(barcode)
 		if product is not None:
@@ -125,6 +125,6 @@ class PriceDialog(QtWidgets.QDialog):
 			self.priceLabel.setFixedWidth(width + 20)
 
 		else:
-			Toast.warning('Product Warning', 'Product does not exist', self.parent())
+			Toast.warning('Product Warning', 'Product does not exist')
 
 		self.barcodeLineEdit.selectAll()

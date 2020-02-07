@@ -125,7 +125,7 @@ class ProductAddDialog(QtWidgets.QDialog):
 			profit = str(round((100 * sellingPrice / purchasePrice) - 100, 2))
 			self.secondProfitLabel.setText(f'{profit}%')
 		except Exception as e:
-			Toast.warning('Profit', 'Second Profit is not calculated properly', self.parent())
+			Toast.warning('Profit', 'Second Profit is not calculated properly')
 
 
 	def __updateFirstProfit(self, text):
@@ -138,7 +138,7 @@ class ProductAddDialog(QtWidgets.QDialog):
 			profit = str(round((100 * sellingPrice / purchasePrice) - 100, 2))
 			self.profitLabel.setText(f'{profit}%')
 		except Exception as e:
-			Toast.warning('Profit', 'Profit is not calculated properly', self.parent())
+			Toast.warning('Profit', 'Profit is not calculated properly')
 
 
 	def __openProductDialog(self):
@@ -207,7 +207,7 @@ class ProductAddDialog(QtWidgets.QDialog):
 			index = self.__model.getIndexWithBarcode(barcode)
 			if index.isValid() is True:
 				index.model().setData(index, self.__updateProductValue)
-				Toast.success('Product Edit', 'Product is updated successfully', self.parent())
+				Toast.success('Product Edit', 'Product is updated successfully')
 			else:
 				barcode = self.barcodeLineEdit.text()
 				name = self.productNameLineEdit.text()
@@ -218,10 +218,10 @@ class ProductAddDialog(QtWidgets.QDialog):
 				product = Product(barcode, name, str(purchasePrice), str(sellingPrice), secondSellingPrice, None,
 								  str(valueTaxAdded))
 				self.__model.addProduct(product)
-				Toast.success('Product Add', 'New product is added successfully', self.parent())
+				Toast.success('Product Add', 'New product is added successfully')
 		except Exception as e:
 			print(f'Product is not added or updated successfully. Exception is {e}')
-			Toast.error('Update Error', 'Product is not added or updated successfully', self.parent())
+			Toast.error('Update Error', 'Product is not added or updated successfully')
 
 		self.setProduct(None)
 

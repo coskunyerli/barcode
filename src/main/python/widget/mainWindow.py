@@ -4,12 +4,13 @@ import PySide2.QtCore as QtCore, PySide2.QtWidgets as QtWidgets, PySide2.QtGui a
 import log
 
 from model.dictList import DictList
+from model.preferences import PreferencesObject
 from model.product import Product
 from widget.mainWidget import MainWidget
 from widget.toast import Toast
 
 
-class MainWindow(QtWidgets.QMainWindow):
+class MainWindow(QtWidgets.QMainWindow, PreferencesObject):
 	def __init__(self, parent=None):
 		super(MainWindow, self).__init__(parent)
 		menubar = self.menuBar()
@@ -68,7 +69,7 @@ class MainWindow(QtWidgets.QMainWindow):
 				self.mainWidget.productModel.load()
 		except Exception as e:
 			log.error(f'Product model is not loaded from its path successfully. {e}')
-			Toast.error('Product Model Loading Error', 'Product model is not loaded successfully from its file', self)
+			Toast.error('Product Model Loading Error', 'Product model is not loaded successfully from its file')
 
 
 	def writeSettings(self):
@@ -127,19 +128,21 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
 	def importCSVFile(self):
-		filename, res = QtWidgets.QFileDialog.getOpenFileName(self, "Import CSV File", '',
+		filename, res = QtWidgets.QFileDialog.getOpenFileName(self, "Import CSV File",
+															  self.preferences().node('filePath').get('importCSV', ''),
 															  "CSV Files(*.csv)")
 		try:
 			if res and filename:
 				res = self.__importCSVFile(filename)
+				self.preferences().setNode('filePath')['importCsv'] = filename
 				if res is True:
 					self.__lastLoadPath = filename
-					Toast.success('CSV Import', 'Importing CSV file is done successfully', self)
+					Toast.success('CSV Import', 'Importing CSV file is done successfully')
 				else:
 					Toast.error('CSV Import', 'Invalid file CSV to import')
 		except Exception as e:
 			log.error(f'There is an error importing csv file. File is {filename}. error is {e}')
-			# Toast.error('CSV Import', 'Error occurred while importing CSV file', self)
+			Toast.error('CSV Import', 'Error occurred while importing CSV file')
 
 
 	def exportCSVFile(self):
@@ -154,12 +157,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
 				res = self.__exportCSVFile(filename)
 				if res is True:
-					Toast.success('CSV Export', 'Exporting CSV file is done successfully', self)
+					Toast.success('CSV Export', 'Exporting CSV file is done successfully')
 				else:
-					Toast.error('CSV Export', 'Invalid file CSV to export', self)
+					Toast.error('CSV Export', 'Invalid file CSV to export')
 		except Exception as e:
 			log.error(f'There is an error exporting csv file. File is {filename}. error is {e}')
-			Toast.error('CSV Export', 'Error occurred while exporting CSV file', self)
+			Toast.error('CSV Export', 'Error occurred while exporting CSV file')
 
 
 	def __importCSVFile(self, filename):

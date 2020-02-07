@@ -282,9 +282,9 @@ class MainWidget(QtWidgets.QWidget):
 			if soldProduct.totalPrice() != 0:
 				self.currentSoldProductModel().addProduct(soldProduct, distinct)
 			else:
-				Toast.warning('Product Warning', 'Price of product can not be 0', self.parent())
+				Toast.warning('Product Warning', 'Price of product can not be 0')
 		else:
-			Toast.warning('Product Warning', 'Product does not exist', self.parent())
+			Toast.warning('Product Warning', 'Product does not exist')
 
 
 	def showProductDialog(self):

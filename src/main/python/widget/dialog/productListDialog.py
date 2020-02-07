@@ -112,7 +112,7 @@ class ProductListDialog(QtWidgets.QDialog):
 			self.currentProductNumberLabel.setText(str(self.proxyModel.rowCount()))
 		except Exception as e:
 			log.error(f'Product {index} is not deleted in product model. Exception is {e}')
-			Toast.error('Product Deleting Error', 'Product is not deleted successfully', self.parent())
+			Toast.error('Product Deleting Error', 'Product is not deleted successfully')
 
 
 	def __editProduct(self, index):
