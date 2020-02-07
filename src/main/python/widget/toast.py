@@ -4,13 +4,19 @@ import PySide2.QtWidgets as QtWidgets, PySide2.QtCore as QtCore, PySide2.QtGui a
 
 
 class Toast(QtWidgets.QFrame):
+	parent = None
 	toastArray = []
 	settings = {'fadeInTime': 1000, 'fadeOutTime': 200, 'titleStyle': "color:white",
 				'messageStyle': "color:white", 'showAnimationType': 6, 'hideAnimationType': 0,
 				'style': '', 'addTop': True, 'iconPath': '.'}
 
 
-	def __init__(self, title, message, parent = None):
+	@classmethod
+	def setParent(cls, parent):
+		cls.parent = parent
+
+
+	def __init__(self, title, message, parent=None):
 		super(Toast, self).__init__(parent)
 		self.setupUi()
 		self.initWidgets()
@@ -27,13 +33,13 @@ class Toast(QtWidgets.QFrame):
 		self.showAnim.setStartValue(0)
 		self.showAnim.setEndValue(1)
 		self.showAnim.setEasingCurve(
-			QtCore.QEasingCurve(QtCore.QEasingCurve.Type(Toast.settings.get('showAnimationType'))))
+				QtCore.QEasingCurve(QtCore.QEasingCurve.Type(Toast.settings.get('showAnimationType'))))
 		self.hideAnim = QtCore.QPropertyAnimation(eff, b'opacity', eff)
 		self.hideAnim.setDuration(Toast.settings.get('fadeOutTime'))
 		self.hideAnim.setStartValue(1)
 		self.hideAnim.setEndValue(0)
 		self.hideAnim.setEasingCurve(
-			QtCore.QEasingCurve(QtCore.QEasingCurve.Type(Toast.settings.get('hideAnimationType'))))
+				QtCore.QEasingCurve(QtCore.QEasingCurve.Type(Toast.settings.get('hideAnimationType'))))
 		self.initSignalsAndSlot()
 
 
@@ -135,7 +141,9 @@ class Toast(QtWidgets.QFrame):
 
 
 	@classmethod
-	def success(cls, title, message, parent = None):
+	def success(cls, title, message, parent=None):
+		if parent is None:
+			parent = cls.parent
 		toast = Toast(title, message, parent)
 		icon = QtGui.QIcon()
 		icon.addPixmap(QtGui.QPixmap(os.path.join(Toast.settings['iconPath'], "checkmark.png")),
@@ -147,7 +155,9 @@ class Toast(QtWidgets.QFrame):
 
 
 	@classmethod
-	def info(cls, title, message, parent = None):
+	def info(cls, title, message, parent=None):
+		if parent is None:
+			parent = cls.parent
 		toast = Toast(title, message, parent)
 		icon = QtGui.QIcon()
 		icon.addPixmap(QtGui.QPixmap(os.path.join(Toast.settings['iconPath'], "info.png")),
@@ -159,7 +169,9 @@ class Toast(QtWidgets.QFrame):
 
 
 	@classmethod
-	def warning(cls, title, message, parent = None):
+	def warning(cls, title, message, parent=None):
+		if parent is None:
+			parent = cls.parent
 		toast = Toast(title, message, parent)
 
 		icon = QtGui.QIcon()
@@ -172,7 +184,9 @@ class Toast(QtWidgets.QFrame):
 
 
 	@classmethod
-	def error(cls, title, message, parent = None):
+	def error(cls, title, message, parent=None):
+		if parent is None:
+			parent = cls.parent
 		toast = Toast(title, message, parent)
 
 		icon = QtGui.QIcon()
