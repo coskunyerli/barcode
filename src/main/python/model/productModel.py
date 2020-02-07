@@ -69,16 +69,11 @@ class ProductModel(QtCore.QAbstractTableModel):
 
 
 	def __barcode(self, barcode):
-		# convert barcode to local value
-		if self.productType(barcode) == ProductType.WEIGHABLE:
-			return ProductType.convertWeighableBarcode(barcode)
-		else:
-			return barcode
+		return ProductType.convertWeighableBarcode(barcode)
 
 
 	def getProductWithBarcode(self, barcode):
 		localBarcode = self.__barcode(barcode)
-
 		return self.__productList[localBarcode]
 
 
