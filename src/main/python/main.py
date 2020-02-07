@@ -47,6 +47,9 @@ if __name__ == '__main__':
 		fbs.app.setPalette(palette)
 
 		mainWindow = MainWindow()
+
+		Toast.setParent(mainWindow)
+
 		mainWindow.show()
 		Toast.settings['iconPath'] = fbs.get_resource('icons')
 		barcodeQssFile = fbs.get_resource(os.path.join('qss', 'barcode.qss'))
