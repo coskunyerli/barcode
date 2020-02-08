@@ -1,22 +1,18 @@
 import os
 
-import PySide2.QtWidgets as QtWidgets, PySide2.QtCore as QtCore, PySide2.QtGui as QtGui
+import PySide2.QtCore as QtCore, PySide2.QtWidgets as QtWidgets, PySide2.QtGui as QtGui
 
 
 class Toast(QtWidgets.QFrame):
-	parent = None
+	widget = None
+	# its icons names are = checkmark.png, close.png, error.png, info.png, warning.png
 	toastArray = []
-	settings = {'fadeInTime': 1000, 'fadeOutTime': 200, 'titleStyle': "color:white",
+	settings = {'fadeInTime': 1000, 'fadeOutTime': 150, 'titleStyle': "color:white",
 				'messageStyle': "color:white", 'showAnimationType': 6, 'hideAnimationType': 0,
-				'style': '', 'addTop': True, 'iconPath': '.'}
+				'style': '', 'addTop': True, 'iconsPath': '.'}
 
 
-	@classmethod
-	def setParent(cls, parent):
-		cls.parent = parent
-
-
-	def __init__(self, title, message, parent=None):
+	def __init__(self, title, message, parent = None):
 		super(Toast, self).__init__(parent)
 		self.setupUi()
 		self.initWidgets()
@@ -26,15 +22,14 @@ class Toast(QtWidgets.QFrame):
 		self.setFrameShape(QtWidgets.QFrame.StyledPanel)
 		self.setFrameShadow(QtWidgets.QFrame.Plain)
 		eff = QtWidgets.QGraphicsOpacityEffect(self)
-		eff.setOpacity(0)
 		self.setGraphicsEffect(eff)
-		self.showAnim = QtCore.QPropertyAnimation(eff, b'opacity', eff)
+		self.showAnim = QtCore.QPropertyAnimation(eff, b'opacity', parent)
 		self.showAnim.setDuration(Toast.settings.get('fadeInTime'))
 		self.showAnim.setStartValue(0)
 		self.showAnim.setEndValue(1)
 		self.showAnim.setEasingCurve(
 				QtCore.QEasingCurve(QtCore.QEasingCurve.Type(Toast.settings.get('showAnimationType'))))
-		self.hideAnim = QtCore.QPropertyAnimation(eff, b'opacity', eff)
+		self.hideAnim = QtCore.QPropertyAnimation(eff, b'opacity', parent)
 		self.hideAnim.setDuration(Toast.settings.get('fadeOutTime'))
 		self.hideAnim.setStartValue(1)
 		self.hideAnim.setEndValue(0)
@@ -84,7 +79,7 @@ class Toast(QtWidgets.QFrame):
 	def initWidgets(self):
 		self.closeButton = QtWidgets.QPushButton(self)
 		icon = QtGui.QIcon()
-		icon.addPixmap(QtGui.QPixmap(os.path.join(Toast.settings['iconPath'], "delete.png")),
+		icon.addPixmap(QtGui.QPixmap(os.path.join(Toast.settings['iconsPath'], "close.png")),
 					   QtGui.QIcon.Normal,
 					   QtGui.QIcon.Off)
 		self.closeButton.setIcon(icon)
@@ -141,12 +136,12 @@ class Toast(QtWidgets.QFrame):
 
 
 	@classmethod
-	def success(cls, title, message, parent=None):
-		if parent is None:
-			parent = cls.parent
+	def success(cls, title, message, parent = None):
+		if parent is None and Toast.widget is not None:
+			parent = Toast.widget
 		toast = Toast(title, message, parent)
 		icon = QtGui.QIcon()
-		icon.addPixmap(QtGui.QPixmap(os.path.join(Toast.settings['iconPath'], "checkmark.png")),
+		icon.addPixmap(QtGui.QPixmap(os.path.join(Toast.settings['iconsPath'], "checkmark.png")),
 					   QtGui.QIcon.Normal,
 					   QtGui.QIcon.Off)
 		toast.setBackgroundColor(QtGui.QColor('#4CA055'))
@@ -155,12 +150,12 @@ class Toast(QtWidgets.QFrame):
 
 
 	@classmethod
-	def info(cls, title, message, parent=None):
-		if parent is None:
-			parent = cls.parent
+	def info(cls, title, message, parent = None):
+		if parent is None and Toast.widget is not None:
+			parent = Toast.widget
 		toast = Toast(title, message, parent)
 		icon = QtGui.QIcon()
-		icon.addPixmap(QtGui.QPixmap(os.path.join(Toast.settings['iconPath'], "info.png")),
+		icon.addPixmap(QtGui.QPixmap(os.path.join(Toast.settings['iconsPath'], "info.png")),
 					   QtGui.QIcon.Normal,
 					   QtGui.QIcon.Off)
 		toast.setIcon(icon)
@@ -169,13 +164,13 @@ class Toast(QtWidgets.QFrame):
 
 
 	@classmethod
-	def warning(cls, title, message, parent=None):
-		if parent is None:
-			parent = cls.parent
+	def warning(cls, title, message, parent = None):
+		if parent is None and Toast.widget is not None:
+			parent = Toast.widget
 		toast = Toast(title, message, parent)
 
 		icon = QtGui.QIcon()
-		icon.addPixmap(QtGui.QPixmap(os.path.join(Toast.settings['iconPath'], "attention.png")),
+		icon.addPixmap(QtGui.QPixmap(os.path.join(Toast.settings['iconsPath'], "warning.png")),
 					   QtGui.QIcon.Normal,
 					   QtGui.QIcon.Off)
 		toast.setIcon(icon)
@@ -184,13 +179,13 @@ class Toast(QtWidgets.QFrame):
 
 
 	@classmethod
-	def error(cls, title, message, parent=None):
-		if parent is None:
-			parent = cls.parent
+	def error(cls, title, message, parent = None):
+		if parent is None and Toast.widget is not None:
+			parent = Toast.widget
 		toast = Toast(title, message, parent)
 
 		icon = QtGui.QIcon()
-		icon.addPixmap(QtGui.QPixmap(os.path.join(Toast.settings['iconPath'], "delete.png")),
+		icon.addPixmap(QtGui.QPixmap(os.path.join(Toast.settings['iconsPath'], "error.png")),
 					   QtGui.QIcon.Normal,
 					   QtGui.QIcon.Off)
 		toast.setIcon(icon)
@@ -205,3 +200,8 @@ class Toast(QtWidgets.QFrame):
 			toast = cls.toastArray[i]
 			toast.move(toast.parent().width() - toast.sizeHint().width() - 10, indexHeight)
 			indexHeight += toast.sizeHint().height() + 5
+
+
+	@classmethod
+	def setWidget(cls, widget):
+		cls.widget = widget
