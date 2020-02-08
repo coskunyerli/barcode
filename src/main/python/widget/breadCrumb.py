@@ -126,8 +126,7 @@ class BreadCrumb(QtWidgets.QFrame):
 
 
 	def setCurrentIndex(self, index):
-		if index is None or index > len(self.buttonList) - 1 or index < 0:
-			index = 0
+		index = min(self.count() - 1, max(0, index))
 		button = self.buttonList[index]
 		if self.__currentButton() is not None:
 			self.__currentButton().setActive(ActiveFlag.TOP, False)
@@ -176,6 +175,10 @@ class BreadCrumb(QtWidgets.QFrame):
 			del item
 		self.mainLayout.removeItem(self.__spacer)
 		self.buttonList = []
+
+
+	def count(self):
+		return len(self.buttonList) - 1
 
 
 class BreadCrumbItem(QtWidgets.QFrame):
