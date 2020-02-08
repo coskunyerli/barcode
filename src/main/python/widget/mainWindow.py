@@ -18,7 +18,9 @@ class MainWindow(QtWidgets.QMainWindow, PreferencesService, FilePathService):
 		menubar = self.menuBar()
 		menu = QtWidgets.QMenu('File')
 		self.importCsvAction = menu.addAction('Import CSV')
+		self.importCsvAction.setShortcut(QtGui.QKeySequence('Ctrl+O'))
 		self.exportCsvAction = menu.addAction('Export CSV')
+		self.exportCsvAction.setShortcut(QtGui.QKeySequence('Ctrl+X'))
 		menubar.addMenu(menu)
 		self.importCsvAction.triggered.connect(self.importCSVFile)
 		self.exportCsvAction.triggered.connect(self.exportCSVFile)
@@ -28,9 +30,7 @@ class MainWindow(QtWidgets.QMainWindow, PreferencesService, FilePathService):
 		self.__lastLoadPath = None
 		self.settings = QtCore.QSettings(QtCore.QSettings.IniFormat, QtCore.QSettings.UserScope, "Barcode", "barcode")
 		self.setCentralWidget(self.mainWidget)
-		self.importCSVShortCut = QtWidgets.QShortcut(self)
-		self.importCSVShortCut.setKey(QtGui.QKeySequence('Ctrl+O'))
-		self.importCSVShortCut.activated.connect(self.importCSVFile)
+
 		self.initSignalsAndSlots()
 
 
