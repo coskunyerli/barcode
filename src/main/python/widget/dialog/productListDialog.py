@@ -2,6 +2,7 @@ import PySide2.QtWidgets as QtWidgets, PySide2.QtCore as QtCore
 import log
 
 from proxy.searchProductModelProxy import SearchProductModelProxy
+from widget.dialogNameWidget import DialogNameWidget
 from widget.toast import Toast
 
 
@@ -15,14 +16,12 @@ class ProductListDialog(QtWidgets.QDialog):
 		self.proxyModel.setSourceModel(model)
 
 		self.mainLayout = QtWidgets.QVBoxLayout(self)
-		self.mainLayout.setContentsMargins(8,8,8,8)
+		self.mainLayout.setContentsMargins(8, 8, 8, 8)
 
-		self.productListLabel = QtWidgets.QLabel(self)
-		self.productListLabel.setText('Product List')
-		font = self.productListLabel.font()
-		font.setPointSize(36)
-		self.productListLabel.setFont(font)
-		self.productListLabel.setAlignment(QtCore.Qt.AlignCenter)
+		self.dialogNameLabel = DialogNameWidget(self)
+		self.dialogNameLabel.setText('Product List')
+		self.dialogNameLabel.setPointSize(24)
+		self.dialogNameLabel.setAlignment(QtCore.Qt.AlignCenter)
 
 		self.productTableView = QtWidgets.QTableView(self)
 		self.productTableView.setVerticalScrollMode(QtWidgets.QAbstractItemView.ScrollPerItem)
@@ -35,6 +34,7 @@ class ProductListDialog(QtWidgets.QDialog):
 		self.searchWidgetLayout = QtWidgets.QHBoxLayout(self.searchWidget)
 		self.searchWidgetLayout.setContentsMargins(0, 0, 0, 0)
 		self.searchLineEdit = QtWidgets.QLineEdit(self.searchWidget)
+		self.searchLineEdit.setObjectName('barcodeLineEdit')
 		self.searchLineEdit.setPlaceholderText('Search With Name')
 
 		self.searchWidgetLayout.addWidget(self.searchLineEdit)
@@ -63,7 +63,7 @@ class ProductListDialog(QtWidgets.QDialog):
 		spacerItem = QtWidgets.QSpacerItem(3, 3, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
 		self.footerWidgetLayout.addItem(spacerItem)
 
-		self.mainLayout.addWidget(self.productListLabel)
+		self.mainLayout.addWidget(self.dialogNameLabel)
 		self.mainLayout.addWidget(self.productTableView)
 		self.mainLayout.addWidget(self.searchWidget)
 		self.mainLayout.addWidget(self.footerWidget)

@@ -10,7 +10,7 @@ class SoldProductModel(QtCore.QAbstractTableModel):
 	totalPriceChanged = QtCore.Signal(float)
 
 
-	def __init__(self, productModel=None):
+	def __init__(self, productModel = None):
 		super(SoldProductModel, self).__init__()
 		self.__productList = []
 		self.__headerData = ['Barcode', 'Name', 'Amount', 'Price', 'Total Price']
@@ -46,7 +46,7 @@ class SoldProductModel(QtCore.QAbstractTableModel):
 		self.endResetModel()
 
 
-	def addProduct(self, product, distinct=False):
+	def addProduct(self, product, distinct = False):
 		if distinct is False:
 			currentProduct = self.product(product.id())
 			if currentProduct is not None:
@@ -69,7 +69,7 @@ class SoldProductModel(QtCore.QAbstractTableModel):
 			return super(SoldProductModel, self).flags(index)
 
 
-	def setData(self, index, data, role=QtCore.Qt.EditRole):
+	def setData(self, index, data, role = QtCore.Qt.EditRole):
 		if role == QtCore.Qt.EditRole:
 			if index.column() == 2 and data.isdigit():
 				amount = int(data)
@@ -100,25 +100,30 @@ class SoldProductModel(QtCore.QAbstractTableModel):
 		self.totalPriceChanged.emit(self.totalPrice())
 
 
-	def columnCount(self, index=QtCore.QModelIndex()):
+	def columnCount(self, index = QtCore.QModelIndex()):
 		return len(self.__headerData)
 
 
-	def rowCount(self, index=QtCore.QModelIndex()):
+	def rowCount(self, index = QtCore.QModelIndex()):
 		return len(self.__productList)
 
 
-	def data(self, index, role=QtCore.Qt.DisplayRole):
+	def data(self, index, role = QtCore.Qt.DisplayRole):
 		if index.isValid() is False:
 			return None
 		if role == QtCore.Qt.DisplayRole:
 			soldProduct = self.__productList[index.row()]
-			data = [soldProduct.id(), soldProduct.name(), f'{soldProduct.amount()}{soldProduct.unit()}',
+			data = [soldProduct.id(), soldProduct.name(), f'{soldProduct.amount()} {soldProduct.unit()}',
 					f'{soldProduct.price()} ₺',
 					f'{soldProduct.totalPrice()} ₺']
 			return data[index.column()]
 		elif role == QtCore.Qt.UserRole:
 			return self.__productList[index.row()]
+		elif role == QtCore.Qt.TextAlignmentRole:
+			if index.column() == 2 or index.column() == 3 or index.column() == 4:
+				return QtCore.Qt.AlignCenter
+			else:
+				return QtCore.Qt.AlignVCenter
 
 
 	def headerData(self, section, orientation, role):

@@ -1,4 +1,5 @@
 import PySide2.QtCore as QtCore, PySide2.QtWidgets as QtWidgets, PySide2.QtGui as QtGui
+from widget.dialogNameWidget import DialogNameWidget
 
 currentIndex = 0
 
@@ -13,12 +14,10 @@ class OldReceiptDialog(QtWidgets.QDialog):
 		self.verticalLayout.setContentsMargins(8, 4, 8, 2)
 		self.verticalLayout.setSpacing(4)
 
-		self.productListLabel = QtWidgets.QLabel(self)
-		self.productListLabel.setText('Sold Products')
-		font = self.productListLabel.font()
-		font.setPointSize(24)
-		self.productListLabel.setFont(font)
-		self.productListLabel.setAlignment(QtCore.Qt.AlignCenter)
+		self.dialogNameLabel = DialogNameWidget(self)
+		self.dialogNameLabel.setText('Sold Products')
+		self.dialogNameLabel.setPointSize(24)
+		self.dialogNameLabel.setAlignment(QtCore.Qt.AlignCenter)
 
 		self.soldProductLabelView = QtWidgets.QTableView(self)
 
@@ -56,7 +55,7 @@ class OldReceiptDialog(QtWidgets.QDialog):
 				QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum))
 		self.infoWidgetLayout.addWidget(self.priceLabel)
 
-		self.verticalLayout.addWidget(self.productListLabel)
+		self.verticalLayout.addWidget(self.dialogNameLabel)
 		self.verticalLayout.addWidget(self.soldProductLabelView)
 		self.verticalLayout.addWidget(self.infoWidget)
 		self.__dailySoldProduct = None

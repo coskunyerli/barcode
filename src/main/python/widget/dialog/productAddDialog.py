@@ -1,5 +1,6 @@
 import PySide2.QtWidgets as QtWidgets, PySide2.QtCore as QtCore, PySide2.QtGui as QtGui
 from model.product import Product
+from widget.dialogNameWidget import DialogNameWidget
 from widget.toast import Toast
 
 
@@ -9,6 +10,12 @@ class ProductAddDialog(QtWidgets.QDialog):
 		self.__product = None
 		self.__model = model
 		self.mainLayout = QtWidgets.QVBoxLayout(self)
+		self.mainLayout.setContentsMargins(12, 12, 12, 12)
+
+		self.dialogNameLabel = DialogNameWidget(self)
+		self.dialogNameLabel.setText('Add/Edit Product')
+		self.dialogNameLabel.setPointSize(24)
+		self.dialogNameLabel.setAlignment(QtCore.Qt.AlignCenter)
 
 		self.barcodeInfoFrame = QtWidgets.QFrame(self)
 		self.barcodeInfoFrame.setObjectName('addProductFrame')
@@ -85,6 +92,7 @@ class ProductAddDialog(QtWidgets.QDialog):
 		self.buttonWidgetLayout.addWidget(self.newProductButton)
 		self.buttonWidgetLayout.addWidget(self.productButton)
 
+		self.mainLayout.addWidget(self.dialogNameLabel)
 		self.mainLayout.addWidget(self.buttonWidget)
 		self.mainLayout.addWidget(self.barcodeInfoFrame)
 		self.mainLayout.addWidget(self.priceFrame)
@@ -130,7 +138,7 @@ class ProductAddDialog(QtWidgets.QDialog):
 
 	def __updateFirstProfit(self, text):
 		if not text:
-			return
+			self.profitLabel.setText(f'{0.0}%')
 		try:
 			sellingPrice = float(text)
 			purchasePrice = float(self.purchasePriceLineEdit.text())
@@ -149,7 +157,11 @@ class ProductAddDialog(QtWidgets.QDialog):
 		if event.key() == QtCore.Qt.Key_F9:
 			self.__openProductDialog()
 		elif event.modifiers() & QtCore.Qt.ControlModifier and event.key() == QtCore.Qt.Key_N:
+			self.newProductButton.click()
+		elif event.key() == QtCore.Qt.Key_Return:
 			pass
+		elif event.matches(QtGui.QKeySequence.Save):
+			self.saveButton.click()
 		else:
 			super(ProductAddDialog, self).keyPressEvent(event)
 
@@ -173,6 +185,8 @@ class ProductAddDialog(QtWidgets.QDialog):
 			self.sellingPriceLineEdit.setText('')
 			self.vatLineEdit.setText('')
 			self.secondSellingPriceLineEdit.setText('')
+			self.profitLabel.setText(f'{0.0}%')
+			self.secondProfitLabel.setText(f'{0.0}%')
 
 		self.sellingPriceLineEdit.textChanged.connect(self.__updateFirstProfit)
 		self.secondSellingPriceLineEdit.textChanged.connect(self.__updateSecondProfit)

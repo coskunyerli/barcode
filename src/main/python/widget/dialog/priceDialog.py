@@ -2,12 +2,13 @@ import os
 
 import PySide2.QtCore as QtCore, PySide2.QtWidgets as QtWidgets, PySide2.QtGui as QtGui
 from enums import BarcodeType
+from widget.dialogNameWidget import DialogNameWidget
 from widget.toast import Toast
 import core
 
 
 class PriceDialog(QtWidgets.QDialog):
-	def __init__(self, model, parent=None):
+	def __init__(self, model, parent = None):
 		super(PriceDialog, self).__init__(parent)
 		self.__model = model
 		self.setFixedWidth(500)
@@ -15,6 +16,11 @@ class PriceDialog(QtWidgets.QDialog):
 		self.verticalLayout = QtWidgets.QVBoxLayout(self)
 		self.verticalLayout.setContentsMargins(8, 8, 8, 8)
 		self.verticalLayout.setSpacing(8)
+
+		self.dialogNameLabel = DialogNameWidget(self)
+		self.dialogNameLabel.setText('Product Price')
+		self.dialogNameLabel.setPointSize(24)
+		self.dialogNameLabel.setAlignment(QtCore.Qt.AlignCenter)
 
 		self.barcodeLineEdit = QtWidgets.QLineEdit(self)
 		self.barcodeLineEdit.setObjectName('barcodeLineEdit')
@@ -63,6 +69,7 @@ class PriceDialog(QtWidgets.QDialog):
 		font.setPointSize(48)
 		self.priceLabel.setFont(font)
 
+		self.verticalLayout.addWidget(self.dialogNameLabel)
 		self.verticalLayout.addWidget(self.barcodeLineEdit)
 		self.verticalLayout.addWidget(self.infoWidget)
 		self.verticalLayout.addWidget(self.priceWidget)
