@@ -4,6 +4,7 @@ import os
 import PySide2.QtCore as QtCore
 import log
 from enums import ProductType
+from exceptions import InvalidProductModelException
 
 from model.dictList import DictList
 from model.product import Product
@@ -11,7 +12,7 @@ from model.product import Product
 
 class ProductModel(QtCore.QAbstractTableModel):
 
-	def __init__(self, path=None):
+	def __init__(self, path = None):
 		super(ProductModel, self).__init__()
 		self.__path = path
 		self.__isSavedEveryUpdate = False
@@ -60,7 +61,7 @@ class ProductModel(QtCore.QAbstractTableModel):
 			self.save()
 
 
-	def columnCount(self, index=QtCore.QModelIndex()):
+	def columnCount(self, index = QtCore.QModelIndex()):
 		return len(self.__headerData)
 
 
@@ -77,11 +78,11 @@ class ProductModel(QtCore.QAbstractTableModel):
 		return self.__productList[localBarcode]
 
 
-	def rowCount(self, index=QtCore.QModelIndex()):
+	def rowCount(self, index = QtCore.QModelIndex()):
 		return len(self.__productList)
 
 
-	def data(self, index, role=QtCore.Qt.DisplayRole):
+	def data(self, index, role = QtCore.Qt.DisplayRole):
 		if index.isValid() is False:
 			return None
 		if role == QtCore.Qt.DisplayRole:
@@ -105,7 +106,7 @@ class ProductModel(QtCore.QAbstractTableModel):
 			return QtCore.QModelIndex()
 
 
-	def setData(self, index, func, role=QtCore.Qt.EditRole):
+	def setData(self, index, func, role = QtCore.Qt.EditRole):
 		if index.isValid() is False:
 			return False
 		item = self.data(index, QtCore.Qt.UserRole)
@@ -117,7 +118,7 @@ class ProductModel(QtCore.QAbstractTableModel):
 		return False
 
 
-	def headerData(self, section, orientation, role=QtCore.Qt.DisplayRole):
+	def headerData(self, section, orientation, role = QtCore.Qt.DisplayRole):
 		if orientation == QtCore.Qt.Horizontal:
 			if role == QtCore.Qt.DisplayRole:
 				return self.__headerData[section]
@@ -126,20 +127,24 @@ class ProductModel(QtCore.QAbstractTableModel):
 				return section + 1
 
 
-	def setProductList(self, list):
+	def setProductList(self, list_):
 		self.beginResetModel()
-		self.__productList = self.__preProcessBeforeSetList(list)
+		self.__productList = list_
+		self.__preProcessBeforeSetList()
 		self.endResetModel()
 
 
-	def __preProcessBeforeSetList(self, productList):
-		localProductList = []
+	def __preProcessBeforeSetList(self):
+		productList = self.__productList
 		for key in productList:
 			product = productList[key]
-			localProduct = product.copy()
+			localProduct = product
 			localProduct.setID(self.__barcode(product.id()))
-			localProductList.append(localProduct)
-		return localProductList
+
+		if 0 in productList:
+			del productList[0]
+		if '0' in productList:
+			del productList['0']
 
 
 	def json(self):
@@ -153,13 +158,16 @@ class ProductModel(QtCore.QAbstractTableModel):
 
 	def save(self):
 		if self.path() is not None:
-			try:
-				with open(os.path.join(self.path(), self.__filename), 'w') as file:
-					file.write(json.dumps(self.json()))
-			except Exception as e:
-				raise Exception(f'Product model is not saved into file. path is {self.path()}. {e}')
+			with open(os.path.join(self.path(), self.__filename), 'w') as file:
+				fileInString = json.dumps(self.json())
+
+				number = file.write(fileInString)
+				if number != len(fileInString):
+					raise InvalidProductModelException(
+							f'Product model is not totally saved into file. path is {self.path()}. '
+							f'Some characters are not written')
 		else:
-			raise Exception('There is not path to save it')
+			raise InvalidProductModelException('There is not path to save the model')
 
 
 	def load(self):
@@ -167,12 +175,15 @@ class ProductModel(QtCore.QAbstractTableModel):
 			raise Exception('There is no path to load')
 		else:
 			with open(os.path.join(self.path(), self.__filename)) as file:
-				modelInDict = json.loads(file.read())
+				fileInString = file.read()
+				if not fileInString:
+					raise InvalidProductModelException(f'Empty product file. Path is {self.path()}')
+				modelInDict = json.loads(fileInString)
 				list_ = ProductModel.fromJson(modelInDict)
-				if list_ is not None:
+				if list_:
 					self.setProductList(list_)
 				else:
-					raise Exception(f'Product model is not loaded from file. path is {self.path()}.')
+					raise InvalidProductModelException(f'Product model is not loaded from file. path is {self.path()}.')
 
 
 	@classmethod
