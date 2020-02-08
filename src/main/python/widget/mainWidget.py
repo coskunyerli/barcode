@@ -21,7 +21,7 @@ from widget.toast import Toast
 
 
 class MainWidget(QtWidgets.QWidget):
-	def __init__(self, parent=None):
+	def __init__(self, parent = None):
 		super(MainWidget, self).__init__(parent)
 		self.mainLayout = QtWidgets.QVBoxLayout(self)
 		self.mainLayout.setContentsMargins(0, 0, 0, 0)
@@ -176,7 +176,7 @@ class MainWidget(QtWidgets.QWidget):
 		self.initialize()
 
 
-	def addProductProduct(self, product=None):
+	def addProductProduct(self, product = None):
 		self.productAddDialog.setProduct(product)
 		self.productAddDialog.show()
 		self.productAddDialog.raise_()
@@ -249,8 +249,8 @@ class MainWidget(QtWidgets.QWidget):
 			self.breadCrumbWidget.setCurrentIndex(1)
 		elif event.key() == QtCore.Qt.Key_F3:
 			self.breadCrumbWidget.setCurrentIndex(2)
-		elif event.key() == QtCore.Qt.Key_F4:
-			fKey, res = QtWidgets.QInputDialog.getInt(self, 'F Key', 'Get a F key number', 1, 1, 12)
+		elif event.key() == QtCore.Qt.Key_F12:
+			fKey, res = QtWidgets.QInputDialog.getInt(self, 'Receipt Number', 'Get a number for receipt', 1, 1, 12)
 			if res:
 				self.breadCrumbWidget.setCurrentIndex(fKey - 1)
 		elif event.key() == QtCore.Qt.Key_Left or event.key() == QtCore.Qt.Key_Right:
