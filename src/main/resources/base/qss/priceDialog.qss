@@ -23,12 +23,6 @@ QLabel {
     border-bottom-right-radius: 8px;
 }
 
-#barcodeLineEdit {
-    padding-left: 8px;
-    border-radius: 4px;
-    background-color: white;
-}
-
 #lineItem {
     background-color: red;
 }
