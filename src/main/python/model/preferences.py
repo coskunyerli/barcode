@@ -39,7 +39,7 @@ class ObjectDict(QtCore.QObject):
 		return t
 
 
-	def __deepcopy__(self, memodict={}):
+	def __deepcopy__(self, memodict = {}):
 		t = ObjectDict()
 		t.__dict = copy.deepcopy(self.__dict)
 		return t
@@ -81,7 +81,7 @@ class ObjectDict(QtCore.QObject):
 		return item
 
 
-	def get(self, key, default=None):
+	def get(self, key, default = None):
 		item = self.__dict.get(key)
 		if isinstance(item, ObjectDict):
 			item = item.__dict
@@ -163,9 +163,4 @@ class ObjectDict(QtCore.QObject):
 		return objectDict
 
 
-_preferences = ObjectDict()
 
-
-class PreferencesObject(object):
-	def preferences(self):
-		return _preferences
