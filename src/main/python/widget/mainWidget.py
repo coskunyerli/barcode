@@ -188,10 +188,6 @@ class MainWidget(QtWidgets.QWidget):
 			self.oldProductDialog.show()
 
 
-	# def showNewProductDialog(self):
-	# 	dialog = NewProductDialog(self)
-	# 	dialog.show()
-
 	def addProductToDialySoldProduct(self):
 		model = self.currentSoldProductModel()
 		self.dailySoldProduct.addProduct(model.copy())
