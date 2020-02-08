@@ -103,7 +103,6 @@ class MainWidget(QtWidgets.QWidget):
 		self.totalPriceLabel.setText('Total Price')
 		self.totalPriceTextEdit = QtWidgets.QLineEdit(self.totalPriceWidget)
 		self.totalPriceTextEdit.setObjectName('totalPriceTextEdit')
-		self.totalPriceTextEdit.setFixedHeight(100)
 		self.totalPriceTextEdit.setReadOnly(True)
 		self.totalPriceTextEdit.setFocusPolicy(QtCore.Qt.NoFocus)
 		self.totalPriceTextEdit.setAlignment(QtCore.Qt.AlignCenter)

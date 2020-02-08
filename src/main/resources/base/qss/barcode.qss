@@ -57,6 +57,8 @@ QLineEdit {
     background-color: #a5a5a5;
     border-radius: 8px;
     color: #101010;
+    padding-top:5%;
+    padding-bottom:5%;
 }
 
 #totalPriceLabel {
