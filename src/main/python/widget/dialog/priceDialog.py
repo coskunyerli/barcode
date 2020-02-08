@@ -6,6 +6,8 @@ from widget.dialogNameWidget import DialogNameWidget
 from widget.toast import Toast
 import core
 
+from fontSize import FontSize
+
 
 class PriceDialog(QtWidgets.QDialog):
 	def __init__(self, model, parent = None):
@@ -19,7 +21,7 @@ class PriceDialog(QtWidgets.QDialog):
 
 		self.dialogNameLabel = DialogNameWidget(self)
 		self.dialogNameLabel.setText('Product Price')
-		self.dialogNameLabel.setPointSize(24)
+		self.dialogNameLabel.setPointSize(FontSize.dialogNameLabelFontSize())
 		self.dialogNameLabel.setAlignment(QtCore.Qt.AlignCenter)
 
 		self.barcodeLineEdit = QtWidgets.QLineEdit(self)
@@ -66,7 +68,7 @@ class PriceDialog(QtWidgets.QDialog):
 
 		self.priceWidgetLayout.addWidget(self.priceLabel)
 		font = self.priceLabel.font()
-		font.setPointSize(48)
+		font.setPointSize(FontSize.totalPriceInPriceDialogFontSize())
 		self.priceLabel.setFont(font)
 
 		self.verticalLayout.addWidget(self.dialogNameLabel)

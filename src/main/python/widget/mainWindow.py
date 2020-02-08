@@ -107,7 +107,6 @@ class MainWindow(QtWidgets.QMainWindow, PreferencesService, FilePathService):
 		for i in range(headerView.count()):
 			sizes.append(headerView.sectionSize(i))
 
-		print(sizes)
 		headerSizes['soldProductLabelView'] = sizes
 
 		self.settings.setValue('headerSizes', headerSizes)

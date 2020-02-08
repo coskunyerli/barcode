@@ -5,6 +5,8 @@ from proxy.searchProductModelProxy import SearchProductModelProxy
 from widget.dialogNameWidget import DialogNameWidget
 from widget.toast import Toast
 
+from fontSize import FontSize
+
 
 class ProductListDialog(QtWidgets.QDialog):
 	def __init__(self, model, parent = None):
@@ -20,7 +22,7 @@ class ProductListDialog(QtWidgets.QDialog):
 
 		self.dialogNameLabel = DialogNameWidget(self)
 		self.dialogNameLabel.setText('Product List')
-		self.dialogNameLabel.setPointSize(24)
+		self.dialogNameLabel.setPointSize(FontSize.dialogNameLabelFontSize())
 		self.dialogNameLabel.setAlignment(QtCore.Qt.AlignCenter)
 
 		self.productTableView = QtWidgets.QTableView(self)

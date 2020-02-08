@@ -10,6 +10,21 @@ BreadCrumb {
     background-color: #303030;
 }
 
+QMenuBar{
+background-color:rgb(43,43,43);
+}
+QHeaderView{
+background-color:rgb(50,50,50);
+}
+QHeaderView:section{
+background-color:rgb(80,80,80);
+}
+QTableView QTableCornerButton::section{
+background:#505050;
+border: 1px solid #353535;
+}
+
+
 QScrollArea {
     border: none;
     border-bottom: 1px solid #202020;
@@ -24,7 +39,6 @@ PushButton:hover {
 PushButton {
     background-color: #404040;
     padding: 8px;
-
 }
 
 
@@ -58,6 +72,8 @@ QInputDialog QSpinBox {
 }
 
 InputWidgetGroup QLineEdit {
+    border:0;
+    border-right: 1px solid #101010;
     background-color: #404040;
     padding-left: 4px;
     color: white;
@@ -70,3 +86,4 @@ InputWidgetGroup QLineEdit:disabled {
 #footerWidget {
     background-color: #252525;
 }
+

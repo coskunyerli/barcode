@@ -3,6 +3,8 @@ from model.product import Product
 from widget.dialogNameWidget import DialogNameWidget
 from widget.toast import Toast
 
+from fontSize import FontSize
+
 
 class ProductAddDialog(QtWidgets.QDialog):
 	def __init__(self, model, parent = None):
@@ -14,7 +16,7 @@ class ProductAddDialog(QtWidgets.QDialog):
 
 		self.dialogNameLabel = DialogNameWidget(self)
 		self.dialogNameLabel.setText('Add/Edit Product')
-		self.dialogNameLabel.setPointSize(24)
+		self.dialogNameLabel.setPointSize(FontSize.dialogNameLabelFontSize())
 		self.dialogNameLabel.setAlignment(QtCore.Qt.AlignCenter)
 
 		self.barcodeInfoFrame = QtWidgets.QFrame(self)

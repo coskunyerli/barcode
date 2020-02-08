@@ -1,6 +1,8 @@
 import PySide2.QtCore as QtCore, PySide2.QtWidgets as QtWidgets, PySide2.QtGui as QtGui
 from widget.dialogNameWidget import DialogNameWidget
 
+from fontSize import FontSize
+
 currentIndex = 0
 
 
@@ -9,14 +11,14 @@ class OldReceiptDialog(QtWidgets.QDialog):
 	def __init__(self, parent = None):
 		super(OldReceiptDialog, self).__init__(parent)
 		self.resize(800, 300)
-
+		self.setWindowTitle('Sold Product')
 		self.verticalLayout = QtWidgets.QVBoxLayout(self)
 		self.verticalLayout.setContentsMargins(8, 4, 8, 2)
 		self.verticalLayout.setSpacing(4)
 
 		self.dialogNameLabel = DialogNameWidget(self)
 		self.dialogNameLabel.setText('Sold Products')
-		self.dialogNameLabel.setPointSize(24)
+		self.dialogNameLabel.setPointSize(FontSize.dialogNameLabelFontSize())
 		self.dialogNameLabel.setAlignment(QtCore.Qt.AlignCenter)
 
 		self.soldProductLabelView = QtWidgets.QTableView(self)
@@ -30,6 +32,7 @@ class OldReceiptDialog(QtWidgets.QDialog):
 		validator = QtGui.QIntValidator()
 		self.infoWidgetIndexInfoLineEdit.setValidator(validator)
 		self.infoWidgetIndexInfoLineEdit.setFocusPolicy(QtCore.Qt.ClickFocus)
+		self.infoWidgetIndexInfoLineEdit.setStyleSheet('color:black')
 		self.infoWidgetIndexInfoLabelText = QtWidgets.QLabel(self.infoWidget)
 		self.infoWidgetIndexInfoLabelText.setText('Product')
 
@@ -48,7 +51,7 @@ class OldReceiptDialog(QtWidgets.QDialog):
 		self.priceLabel.setFocusPolicy(QtCore.Qt.NoFocus)
 		self.priceLabel.setAlignment(QtCore.Qt.AlignCenter)
 		font = self.priceLabel.font()
-		font.setPointSize(24)
+		font.setPointSize(FontSize.dialogNameLabelFontSize())
 		self.priceLabel.setFont(font)
 
 		self.infoWidgetLayout.addItem(

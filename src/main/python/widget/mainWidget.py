@@ -1,3 +1,5 @@
+import sys
+
 import PySide2.QtCore as QtCore, PySide2.QtWidgets as QtWidgets, PySide2.QtGui as QtGui
 import core
 
@@ -18,6 +20,8 @@ from widget.footerWidget import FooterWidget
 from widget.inputWidgetGroup import InputWidgetGroup
 from widget.pushButton import PushButton
 from widget.toast import Toast
+
+from fontSize import FontSize
 
 
 class MainWidget(QtWidgets.QWidget):
@@ -102,8 +106,9 @@ class MainWidget(QtWidgets.QWidget):
 		self.totalPriceTextEdit.setReadOnly(True)
 		self.totalPriceTextEdit.setFocusPolicy(QtCore.Qt.NoFocus)
 		self.totalPriceTextEdit.setAlignment(QtCore.Qt.AlignCenter)
+
 		font = self.totalPriceTextEdit.font()
-		font.setPointSize(72)
+		font.setPointSize(FontSize.totalPriceFontSize())
 		self.totalPriceTextEdit.setFont(font)
 
 		self.totalPriceLabel.setFont(font)
