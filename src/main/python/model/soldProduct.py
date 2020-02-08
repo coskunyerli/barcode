@@ -8,7 +8,7 @@ class SoldProduct(object):
 		self.__product = product
 		self.__amount = amount
 		self.__date = datetime.datetime.now()
-		self.__unit = 'number'
+		self.__unit = 'pcs'
 
 
 	def unit(self):
