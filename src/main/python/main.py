@@ -24,9 +24,9 @@ if __name__ == '__main__':
 			os.mkdir(logPath)
 			print('Log folder is created')
 
-		log.basicConfig(filename = os.path.join(logPath, logName),
-						format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s', level = log.INFO)
-
+		# log.basicConfig(filename = os.path.join(logPath, logName),
+		# 				format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s', level = log.INFO)
+		log.basicConfig(format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s', level = log.INFO)
 		try:
 			basePath = fbs.get_resource()
 			productPath = os.path.join(basePath, 'product')
@@ -48,10 +48,13 @@ if __name__ == '__main__':
 
 		mainWindow = MainWindow()
 
-		Toast.setParent(mainWindow)
+		Toast.setWidget(mainWindow)
+		Toast.settings['iconsPath'] = fbs.get_resource('icons')
+
+		mainWindow.readSettings()
+		mainWindow.afterReadSettings()
 
 		mainWindow.show()
-		Toast.settings['iconPath'] = fbs.get_resource('icons')
 		barcodeQssFile = fbs.get_resource(os.path.join('qss', 'barcode.qss'))
 
 		try:
