@@ -33,7 +33,7 @@ class OldReceiptDialog(QtWidgets.QDialog):
 		validator = QtGui.QIntValidator()
 		self.infoWidgetIndexInfoLineEdit.setValidator(validator)
 		self.infoWidgetIndexInfoLineEdit.setFocusPolicy(QtCore.Qt.ClickFocus)
-		self.infoWidgetIndexInfoLineEdit.setStyleSheet('color:black')
+		self.infoWidgetIndexInfoLineEdit.setObjectName('indexInfoLineEdit')
 		self.infoWidgetIndexInfoLabelText = QtWidgets.QLabel(self.infoWidget)
 		self.infoWidgetIndexInfoLabelText.setText('Product')
 

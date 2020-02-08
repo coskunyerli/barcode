@@ -2,6 +2,7 @@ import sys
 
 import PySide2.QtCore as QtCore, PySide2.QtWidgets as QtWidgets, PySide2.QtGui as QtGui
 import core
+import log
 
 from enums import BarcodeType, ProductType
 from event.eventFilterObject import EventFilterForTableView
@@ -163,9 +164,20 @@ class MainWidget(QtWidgets.QWidget):
 		self.addProductToDialySoldProductShortcut.activated.connect(self.addProductToDialySoldProduct)
 
 		self.oldProductDialog = OldReceiptDialog(self)
+		oldProductStyleSheet = core.fbs.qss('soldProductDialog.qss')
+		if oldProductStyleSheet:
+			self.oldProductDialog.setStyleSheet(oldProductStyleSheet)
+		else:
+			log.warning('soldProductDialog.qss is not loaded successfully')
 		self.productDialog = ProductListDialog(self.productModel, self)
 		self.priceDialog = PriceDialog(self.productModel, self)
 		self.productAddDialog = ProductAddDialog(self.productModel, self)
+		productAddDialogStyleSheet = core.fbs.qss('editProductDialog.qss')
+
+		if productAddDialogStyleSheet:
+			self.productAddDialog.setStyleSheet(productAddDialogStyleSheet)
+		else:
+			log.warning('editProductDialog.qss is not loaded successfully')
 
 		self.showPriceDialogShortcut = QtWidgets.QShortcut(self)
 		self.showPriceDialogShortcut.setContext(QtCore.Qt.ApplicationShortcut)
@@ -205,10 +217,10 @@ class MainWidget(QtWidgets.QWidget):
 
 
 	def deleteProduct(self):
-		index = self.soldTableView.currentIndex()
-		if index.isValid():
-			model = index.model()
-			model.pop(index.row())
+		indexes = self.soldTableView.selectedIndexes()
+		indexes = sorted(indexes, key = lambda index: index.row(), reverse = True)
+		for index in indexes:
+			self.soldTableView.model().pop(index.row())
 
 
 	def showPopup(self, pos):

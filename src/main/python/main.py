@@ -55,17 +55,12 @@ if __name__ == '__main__':
 		mainWindow.afterReadSettings()
 
 		mainWindow.show()
-		barcodeQssFile = fbs.get_resource(os.path.join('qss', 'barcode.qss'))
+		barcodeQss = fbs.qss('barcode.qss')
+		if barcodeQss is not None:
+			mainWindow.setStyleSheet(barcodeQss)
+		else:
+			log.warning(f'barcode.qss is not loaded successfully')
 
-		try:
-			qssFile = open(barcodeQssFile)
-			mainWindow.setStyleSheet(qssFile.read())
-		except Exception as e:
-			print(
-					'Failed qss file barcode.qss for MainWindow path is %s, Error is %s ' % (
-						os.path.abspath(barcodeQssFile), str(e)))
-			QtWidgets.QMessageBox.warning(mainWindow, 'Qss Error',
-										  'Path is %s. Error is %s' % (os.path.abspath(barcodeQssFile), str(e)))
 	except Exception as e:
 		log.critical(f'Unexpected error is occurred, Error is => {e}')
 		QtWidgets.QMessageBox().critical(None, 'Error', 'Unexpected error is occurred')
