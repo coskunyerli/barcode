@@ -7,8 +7,8 @@ class FilePath(object):
 		self._data[key] = value
 
 
-	def path(self, key):
-		return self._data[key]
+	def path(self, key, default = None):
+		return self._data.get(key, default)
 
 
 	def json(self):
@@ -18,5 +18,3 @@ class FilePath(object):
 	def fromJson(self, json_):
 		if json_ is not None and isinstance(json_, dict) is True:
 			self._data = json_
-
-
