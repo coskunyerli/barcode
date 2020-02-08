@@ -11,6 +11,7 @@ class OldReceiptDialog(QtWidgets.QDialog):
 	def __init__(self, parent = None):
 		super(OldReceiptDialog, self).__init__(parent)
 		self.resize(800, 300)
+		self.setModal(True)
 		self.setWindowTitle('Sold Product')
 		self.verticalLayout = QtWidgets.QVBoxLayout(self)
 		self.verticalLayout.setContentsMargins(8, 4, 8, 2)

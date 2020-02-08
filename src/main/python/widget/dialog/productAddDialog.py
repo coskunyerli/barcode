@@ -9,6 +9,7 @@ from fontSize import FontSize
 class ProductAddDialog(QtWidgets.QDialog):
 	def __init__(self, model, parent = None):
 		super(ProductAddDialog, self).__init__(parent)
+		self.setModal(True)
 		self.__product = None
 		self.__model = model
 		self.mainLayout = QtWidgets.QVBoxLayout(self)

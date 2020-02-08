@@ -13,6 +13,7 @@ class PriceDialog(QtWidgets.QDialog):
 	def __init__(self, model, parent = None):
 		super(PriceDialog, self).__init__(parent)
 		self.__model = model
+		self.setModal(True)
 		self.setFixedWidth(500)
 		self.setWindowTitle('Product Price')
 		self.verticalLayout = QtWidgets.QVBoxLayout(self)

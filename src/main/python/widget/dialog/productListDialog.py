@@ -12,6 +12,7 @@ class ProductListDialog(QtWidgets.QDialog):
 	def __init__(self, model, parent = None):
 		super(ProductListDialog, self).__init__(parent)
 		self.resize(1000, 600)
+		self.setModal(True)
 		self.setWindowTitle('Products')
 		# prent of SearchProductModelProxy should be main parent
 		self.proxyModel = SearchProductModelProxy(parent)
