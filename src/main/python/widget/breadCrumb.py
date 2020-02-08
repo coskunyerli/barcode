@@ -1,24 +1,40 @@
 import PySide2.QtWidgets as QtWidgets, PySide2.QtCore as QtCore
 import static
 
-
-class ActiveFlag:
-	TOP = 0
-	BOTTOM = 1
-
-
 class BreadCrumbData(object):
+
+	def __init__(self):
+		self._isActive = False
+		self.__parent = None
+
+
+	def _setParent(self, parent):
+		self.__parent = parent
+
+
+	def setActive(self, res):
+		self._isActive = res
+		self.__parent._update()
+
+
 	def isActive(self):
-		pass
+		return self._isActive
 
 
 class ModelBreadCrumbData(BreadCrumbData):
 	def __init__(self):
+		super(ModelBreadCrumbData, self).__init__()
 		self.__model = None
 
 
 	def setModel(self, model):
 		self.__model = model
+		self.__model.totalPriceChanged.connect(self.__updateActivity)
+
+
+	def __updateActivity(self, _):
+		res = self.__model.rowCount() != 0
+		self.setActive(res)
 
 
 	def model(self):
@@ -129,8 +145,8 @@ class BreadCrumb(QtWidgets.QFrame):
 		index = min(self.count() - 1, max(0, index))
 		button = self.buttonList[index]
 		if self.__currentButton() is not None:
-			self.__currentButton().setActive(ActiveFlag.TOP, False)
-		button.setActive(ActiveFlag.TOP, True)
+			self.__currentButton().setCurrent(False)
+		button.setCurrent(True)
 		self.__currentIndex = index
 		self.currentIndexChanged.emit(index)
 
@@ -186,6 +202,7 @@ class BreadCrumbItem(QtWidgets.QFrame):
 	def __init__(self, text, parent = None):
 		super(BreadCrumbItem, self).__init__(parent)
 		self.__itemData = parent._itemDataClass()
+		self.__itemData._setParent(self)
 		self._layout = QtWidgets.QVBoxLayout(self)
 		self.label = QtWidgets.QLabel(self)
 		self.label.setMaximumWidth(200)
@@ -201,21 +218,11 @@ class BreadCrumbItem(QtWidgets.QFrame):
 		self._layout.addWidget(self.label)
 		self._layout.addWidget(self.redLight)
 		self.setStyleSheet("background-color:%s" % '#404040')
-		self.setActive(ActiveFlag.TOP, False)
+		self.__isCurrent = False
 
 
 	def itemData(self):
 		return self.__itemData
-
-
-	def enterEvent(self, event):
-		super(BreadCrumbItem, self).enterEvent(event)
-		self.setStyleSheet("background-color:%s" % '#606060')
-
-
-	def leaveEvent(self, event):
-		super(BreadCrumbItem, self).leaveEvent(event)
-		self.setStyleSheet("background-color:%s" % '#404040')
 
 
 	def setText(self, text):
@@ -227,19 +234,20 @@ class BreadCrumbItem(QtWidgets.QFrame):
 		return self.label.text()
 
 
-	def setActive(self, activeFlag, res):
-		if activeFlag == ActiveFlag.TOP:
-			if res:
-				self.light.setStyleSheet('background-color:#DC7D14')
-			else:
-				self.light.setStyleSheet('background-color:transparent')
-
-		elif activeFlag == ActiveFlag.BOTTOM:
-			if res:
-				self.redLight.setStyleSheet('background-color:red')
-			else:
-				self.redLight.setStyleSheet('background-color:green')
+	def setCurrent(self, res):
+		self.__isCurrent = res
+		if self.__isCurrent is True:
+			self.setStyleSheet('background-color:#373737')
+		else:
+			self.setStyleSheet('background-color:#404040')
 
 
 	def setAlignment(self, align):
 		self.label.setAlignment(align)
+
+
+	def _update(self):
+		if self.itemData().isActive():
+			self.light.setStyleSheet('background-color:#DC7D14')
+		else:
+			self.light.setStyleSheet('background-color:transparent')
