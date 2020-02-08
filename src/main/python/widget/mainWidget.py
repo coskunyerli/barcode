@@ -169,7 +169,7 @@ class MainWidget(QtWidgets.QWidget):
 
 		self.editProductShortcut = QtWidgets.QShortcut(self)
 		self.editProductShortcut.setContext(QtCore.Qt.ApplicationShortcut)
-		self.editProductShortcut.setKey(QtGui.QKeySequence('Ctrl+S'))
+		self.editProductShortcut.setKey(QtGui.QKeySequence('Alt+S'))
 		self.editProductShortcut.activated.connect(self.addProductProduct)
 
 		self.initSignalsAndSlots()
