@@ -10,6 +10,11 @@ class DictList(QtCore.QObject):
 		self.__keys = []
 
 
+	def __delitem__(self, key):
+		del self.__dict[key]
+		self.__keys.remove(key)
+
+
 	def setItem(self, key, value):
 		# set item to the DictList
 		# value is added to the dict, key list is for insertion order
