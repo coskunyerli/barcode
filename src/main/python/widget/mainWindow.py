@@ -2,16 +2,18 @@ import os
 from datetime import date
 import PySide2.QtCore as QtCore, PySide2.QtWidgets as QtWidgets, PySide2.QtGui as QtGui
 import log
+from exceptions import InvalidProductModelException
 
 from model.dictList import DictList
-from model.preferences import PreferencesObject
+from service.filePathService import FilePathService
+from service.preferencesService import PreferencesService
 from model.product import Product
 from widget.mainWidget import MainWidget
 from widget.toast import Toast
 
 
-class MainWindow(QtWidgets.QMainWindow, PreferencesObject):
-	def __init__(self, parent=None):
+class MainWindow(QtWidgets.QMainWindow, PreferencesService, FilePathService):
+	def __init__(self, parent = None):
 		super(MainWindow, self).__init__(parent)
 		menubar = self.menuBar()
 		menu = QtWidgets.QMenu('File')
@@ -30,10 +32,14 @@ class MainWindow(QtWidgets.QMainWindow, PreferencesObject):
 		self.importCSVShortCut.setKey(QtGui.QKeySequence('Ctrl+O'))
 		self.importCSVShortCut.activated.connect(self.importCSVFile)
 		self.initSignalsAndSlots()
-		self.readSettings()
+
+
+	def afterReadSettings(self):
+		pass
 
 
 	def readSettings(self):
+
 		self.resize(self.settings.value("windowSize", QtCore.QSize(1278, 768)))
 		headerSizesDict = self.settings.value('headerSizes', {})
 		headerSizes = headerSizesDict.get('soldTableView', [])
@@ -63,10 +69,17 @@ class MainWindow(QtWidgets.QMainWindow, PreferencesObject):
 			self.__date = date.today()
 
 		# read product model from its path
+		json_ = self.settings.value('filePaths')
+		if json_ is not None and isinstance(json_, dict):
+			self.filePath().fromJson(json_)
+
 		try:
 			productModelPath = self.mainWidget.productModel.productModelFilePath()
 			if productModelPath is not None and os.path.exists(productModelPath):
 				self.mainWidget.productModel.load()
+		except InvalidProductModelException as e:
+			log.error(f'Product is not loaded successfully from file, because of model is invalid. Exception is {e}')
+			Toast.error('Product Model Loading Error', 'Product model is not loaded successfully from its file')
 		except Exception as e:
 			log.error(f'Product model is not loaded from its path successfully. {e}')
 			Toast.error('Product Model Loading Error', 'Product model is not loaded successfully from its file')
@@ -106,8 +119,13 @@ class MainWindow(QtWidgets.QMainWindow, PreferencesObject):
 		self.settings.setValue('date', self.__date.toordinal())
 
 		# save the product model before close app
+		self.settings.setValue('filePaths', self.filePath().json())
 		try:
 			self.mainWidget.productModel.save()
+		except InvalidProductModelException as e:
+			log.error(f'Product model is not saved successfully before app exit. Exception is {e}')
+			QtWidgets.QMessageBox.information(None, 'Product Model Saved Error',
+											  'Product model is not saved successfully before closing app')
 		except Exception as e:
 			log.error(f'Product model is not saved properly before app is closed. {e}')
 			QtWidgets.QMessageBox.information(None, 'Product Model Saved Error',
@@ -129,13 +147,13 @@ class MainWindow(QtWidgets.QMainWindow, PreferencesObject):
 
 	def importCSVFile(self):
 		filename, res = QtWidgets.QFileDialog.getOpenFileName(self, "Import CSV File",
-															  self.preferences().node('filePath').get('importCSV', ''),
+															  self.filePath().path('importCsv', ''),
 															  "CSV Files(*.csv)")
 		try:
 			if res and filename:
 				res = self.__importCSVFile(filename)
-				self.preferences().setNode('filePath')['importCsv'] = filename
 				if res is True:
+					self.filePath().setPath('importCsv', os.path.dirname(filename))
 					self.__lastLoadPath = filename
 					Toast.success('CSV Import', 'Importing CSV file is done successfully')
 				else:
@@ -146,7 +164,8 @@ class MainWindow(QtWidgets.QMainWindow, PreferencesObject):
 
 
 	def exportCSVFile(self):
-		filename, res = QtWidgets.QFileDialog.getSaveFileName(self, "Export CSV File", '',
+		filename, res = QtWidgets.QFileDialog.getSaveFileName(self, "Export CSV File",
+															  self.filePath().path('exportCsv', ''),
 															  "CSV Files(*.csv)")
 		try:
 			if res and filename:
@@ -157,6 +176,7 @@ class MainWindow(QtWidgets.QMainWindow, PreferencesObject):
 
 				res = self.__exportCSVFile(filename)
 				if res is True:
+					self.filePath().setPath('exportCsv', os.path.dirname(filename))
 					Toast.success('CSV Export', 'Exporting CSV file is done successfully')
 				else:
 					Toast.error('CSV Export', 'Invalid file CSV to export')
