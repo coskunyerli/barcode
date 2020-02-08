@@ -31,6 +31,6 @@ class DialogNameWidget(QtWidgets.QWidget):
 			padding: 2px;
 			border: 1px solid #606060;
     	 	border-radius: 8px;
-    	 	color:white;
+    	 	color:rgb(220,220,220);
     	 	font-size: {font}pt;
 			"""
