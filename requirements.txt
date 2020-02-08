@@ -1,2 +1,3 @@
 PySide2==5.11
 fbs
+SQLAlchemy
