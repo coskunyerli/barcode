@@ -13,7 +13,6 @@ class PriceDialog(QtWidgets.QDialog):
 	def __init__(self, model, parent = None):
 		super(PriceDialog, self).__init__(parent)
 		self.__model = model
-		self.setModal(True)
 		self.setFixedWidth(500)
 		self.setWindowTitle('Product Price')
 		self.verticalLayout = QtWidgets.QVBoxLayout(self)
@@ -92,13 +91,6 @@ class PriceDialog(QtWidgets.QDialog):
 		self.closeProductShortcut.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
 		self.closeProductShortcut.setKey(QtGui.QKeySequence(QtCore.Qt.Key_F4))
 		self.closeProductShortcut.activated.connect(self.close)
-
-		qssPath = core.fbs.get_resource(os.path.join('qss', 'priceDialog.qss'))
-		try:
-			qssFile = open(qssPath)
-			self.setStyleSheet(qssFile.read())
-		except Exception as e:
-			print('Error occurred while loading qss file path is %s, Error is => %s' % (qssPath, str(e)))
 
 		self.__model.dataChanged.connect(self.__updateProductPrice)
 

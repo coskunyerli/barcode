@@ -168,8 +168,6 @@ class MainWidget(QtWidgets.QWidget):
 			self.oldProductDialog.setStyleSheet(oldProductStyleSheet)
 		else:
 			log.warning('soldProductDialog.qss is not loaded successfully')
-		self.productDialog = ProductListDialog(self.productModel, self)
-		self.priceDialog = PriceDialog(self.productModel, self)
 		self.productAddDialog = ProductAddDialog(self.productModel, self)
 		productAddDialogStyleSheet = core.fbs.qss('editProductDialog.qss')
 
@@ -300,13 +298,19 @@ class MainWidget(QtWidgets.QWidget):
 
 
 	def showProductDialog(self):
-		self.productDialog.show()
-		self.productDialog.raise_()
+		productDialog = ProductListDialog(self.productModel, self)
+		productDialog.exec_()
+		del productDialog
 
 
 	def __showPriceDialog(self):
-		self.priceDialog.show()
-		self.priceDialog.raise_()
+		priceDialog = PriceDialog(self.productModel, self)
+		styleSheet = core.fbs.qss('priceDialog.qss')
+		if styleSheet:
+			priceDialog.setStyleSheet(styleSheet)
+		else:
+			log.warning(f'Error occurred while loading qss file path is priceDailog.qss')
+		priceDialog.exec_()
 
 
 	def __updateSoldProductModel(self, index):

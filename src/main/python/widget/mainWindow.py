@@ -40,7 +40,7 @@ class MainWindow(QtWidgets.QMainWindow, PreferencesService, FilePathService):
 
 	def readSettings(self):
 		self.resize(self.settings.value("windowSize", QtCore.QSize(1278, 768)))
-		self.mainWidget.productDialog.resize(self.settings.value('productDialogSize', QtCore.QSize(1000, 600)))
+		# self.mainWidget.productDialog.resize(self.settings.value('productDialogSize', QtCore.QSize(1000, 600)))
 		self.mainWidget.oldProductDialog.resize(self.settings.value('oldProductDialogSize', QtCore.QSize(800, 300)))
 
 		headerSizesDict = self.settings.value('headerSizes', {})
@@ -49,12 +49,12 @@ class MainWindow(QtWidgets.QMainWindow, PreferencesService, FilePathService):
 		for i in range(len(headerSizes)):
 			headerView.resizeSection(i, int(headerSizes[i]))
 
-		headerSizes = headerSizesDict.get('productTableView', [])
-		headerView = self.mainWidget.productDialog.productTableView.horizontalHeader()
-		for i in range(len(headerSizes)):
-			headerView.resizeSection(i, int(headerSizes[i]))
+		# headerSizes = headerSizesDict.get('productTableView', [])
+		# headerView = self.mainWidget.productDialog.productTableView.horizontalHeader()
+		# for i in range(len(headerSizes)):
+		# 	headerView.resizeSection(i, int(headerSizes[i]))
 
-		#todo: burası hatalı yanlış çalışıyor
+
 		headerSizes = headerSizesDict.get('soldProductLabelView', [])
 		headerView = self.mainWidget.oldProductDialog.soldProductLabelView.horizontalHeader()
 		for i in range(len(headerSizes)):
@@ -86,7 +86,6 @@ class MainWindow(QtWidgets.QMainWindow, PreferencesService, FilePathService):
 
 
 	def writeSettings(self):
-		return
 		headerSizes = {}
 		sizes = []
 		headerView = self.mainWidget.soldTableView.horizontalHeader()
@@ -96,11 +95,11 @@ class MainWindow(QtWidgets.QMainWindow, PreferencesService, FilePathService):
 		headerSizes['soldTableView'] = sizes
 
 		sizes = []
-		headerView = self.mainWidget.productDialog.productTableView.horizontalHeader()
-		for i in range(headerView.count()):
-			sizes.append(headerView.sectionSize(i))
-
-		headerSizes['productTableView'] = sizes
+		# headerView = self.mainWidget.productDialog.productTableView.horizontalHeader()
+		# for i in range(headerView.count()):
+		# 	sizes.append(headerView.sectionSize(i))
+		#
+		# headerSizes['productTableView'] = sizes
 
 		sizes = []
 		headerView = self.mainWidget.oldProductDialog.soldProductLabelView.horizontalHeader()
@@ -112,7 +111,7 @@ class MainWindow(QtWidgets.QMainWindow, PreferencesService, FilePathService):
 		self.settings.setValue('headerSizes', headerSizes)
 		self.settings.setValue('windowSize', self.size())
 
-		self.settings.setValue('productDialogSize', self.mainWidget.productDialog.size())
+		#self.settings.setValue('productDialogSize', self.mainWidget.productDialog.size())
 		self.settings.setValue('oldProductDialogSize', self.mainWidget.oldProductDialog.size())
 
 		self.mainWidget.dailySoldProduct.save()
