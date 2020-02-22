@@ -5,9 +5,12 @@ import log
 from exceptions import InvalidProductModelException
 
 from model.dictList import DictList
+from model.sizeInfo import SizeInfo
 from service.filePathService import FilePathService
 from service.preferencesService import PreferencesService
 from model.product import Product
+from widget.dialog.oldReceiptDialog import OldReceiptDialog
+from widget.dialog.productListDialog import ProductListDialog
 from widget.mainWidget import MainWidget
 from widget.toast import Toast
 
@@ -39,39 +42,49 @@ class MainWindow(QtWidgets.QMainWindow, PreferencesService, FilePathService):
 
 
 	def readSettings(self):
-		self.resize(self.settings.value("windowSize", QtCore.QSize(1278, 768)))
-		# self.mainWidget.productDialog.resize(self.settings.value('productDialogSize', QtCore.QSize(1000, 600)))
-		self.mainWidget.oldProductDialog.resize(self.settings.value('oldProductDialogSize', QtCore.QSize(800, 300)))
+		try:
+			# read size of window
+			self.resize(self.settings.value("windowSize", QtCore.QSize(1278, 768)))
+			# read header size of dialogs
+			headerSizesDict = self.settings.value('headerSizes', {})
 
-		headerSizesDict = self.settings.value('headerSizes', {})
-		headerSizes = headerSizesDict.get('soldTableView', [])
-		headerView = self.mainWidget.soldTableView.horizontalHeader()
-		for i in range(len(headerSizes)):
-			headerView.resizeSection(i, int(headerSizes[i]))
+			# set default header size of product list dialog
+			productDialogHeaderSize = headerSizesDict.get('productDialogTableViewHeaderSizes')
+			productDialogSizeInfo = SizeInfo(self.settings.value('productDialogSize', QtCore.QSize(1000, 600)),
+											 productDialogHeaderSize)
+			if productDialogSizeInfo.isValid():
+				ProductListDialog.setSizeInfo(productDialogSizeInfo)
 
-		# headerSizes = headerSizesDict.get('productTableView', [])
-		# headerView = self.mainWidget.productDialog.productTableView.horizontalHeader()
-		# for i in range(len(headerSizes)):
-		# 	headerView.resizeSection(i, int(headerSizes[i]))
+			# set default header size of old product list dialog
+			oldProductDialogHeaderSize = headerSizesDict.get('oldProductDialogTableViewHeaderSizes')
+			oldProductDialogSizeInfo = SizeInfo(self.settings.value('oldProductDialogSize', QtCore.QSize(800, 300)),
+												oldProductDialogHeaderSize)
+			if oldProductDialogSizeInfo.isValid():
+				OldReceiptDialog.setSizeInfo(oldProductDialogSizeInfo)
 
+			# set default header size of sold table view in main widget
+			headerSizes = headerSizesDict.get('soldTableViewHeaderSizes', [])
+			headerView = self.mainWidget.soldTableView.horizontalHeader()
+			for i in range(len(headerSizes)):
+				headerView.resizeSection(i, int(headerSizes[i]))
 
-		headerSizes = headerSizesDict.get('soldProductLabelView', [])
-		headerView = self.mainWidget.oldProductDialog.soldProductLabelView.horizontalHeader()
-		for i in range(len(headerSizes)):
-			headerView.resizeSection(i, int(headerSizes[i]))
+			# read daily sold product list from disk
+			self.mainWidget.dailySoldProduct.read()
 
-		self.mainWidget.dailySoldProduct.read()
+			# read date information
+			date_ = self.settings.value('date')
+			if date_ is not None:
+				self.__date = date.fromordinal(int(date_))
+			else:
+				self.__date = date.today()
 
-		date_ = self.settings.value('date')
-		if date_ is not None:
-			self.__date = date.fromordinal(int(date_))
-		else:
-			self.__date = date.today()
+			# read product model from its path
+			json_ = self.settings.value('filePaths')
 
-		# read product model from its path
-		json_ = self.settings.value('filePaths')
-		if json_ is not None and isinstance(json_, dict):
-			self.filePath().fromJson(json_)
+			if json_ is not None and isinstance(json_, dict):
+				self.filePath().fromJson(json_)
+		except Exception as e:
+			log.error(f'Setting file is not loaded properly while open the app. Exception is {e}')
 
 		try:
 			productModelPath = self.mainWidget.productModel.productModelFilePath()
@@ -88,38 +101,34 @@ class MainWindow(QtWidgets.QMainWindow, PreferencesService, FilePathService):
 	def writeSettings(self):
 		headerSizes = {}
 		sizes = []
-		headerView = self.mainWidget.soldTableView.horizontalHeader()
-		for i in range(headerView.count()):
-			sizes.append(headerView.sectionSize(i))
+		try:
+			headerView = self.mainWidget.soldTableView.horizontalHeader()
+			for i in range(headerView.count()):
+				sizes.append(headerView.sectionSize(i))
 
-		headerSizes['soldTableView'] = sizes
+			headerSizes['soldTableViewHeaderSizes'] = sizes
 
-		sizes = []
-		# headerView = self.mainWidget.productDialog.productTableView.horizontalHeader()
-		# for i in range(headerView.count()):
-		# 	sizes.append(headerView.sectionSize(i))
-		#
-		# headerSizes['productTableView'] = sizes
+			self.settings.setValue('headerSizes', headerSizes)
+			self.settings.setValue('windowSize', self.size())
+			productListDialogSizeInfo = ProductListDialog.sizeInfo()
+			if productListDialogSizeInfo is not None and productListDialogSizeInfo.isValid():
+				self.settings.setValue('productDialogSize', productListDialogSizeInfo.size)
+				headerSizes['productDialogTableViewHeaderSizes'] = productListDialogSizeInfo.headerSizes
 
-		sizes = []
-		headerView = self.mainWidget.oldProductDialog.soldProductLabelView.horizontalHeader()
-		for i in range(headerView.count()):
-			sizes.append(headerView.sectionSize(i))
+			oldProductDialogSizeInfo = OldReceiptDialog.sizeInfo()
+			if oldProductDialogSizeInfo is not None and oldProductDialogSizeInfo.isValid():
+				self.settings.setValue('oldProductDialogSize', oldProductDialogSizeInfo.size)
+				headerSizes['oldProductDialogTableViewHeaderSizes'] = oldProductDialogSizeInfo.headerSizes
 
-		headerSizes['soldProductLabelView'] = sizes
+			self.settings.setValue('headerSizes', headerSizes)
+			self.settings.setValue('date', self.__date.toordinal())
+			# save the product model before close app
+			self.settings.setValue('filePaths', self.filePath().json())
 
-		self.settings.setValue('headerSizes', headerSizes)
-		self.settings.setValue('windowSize', self.size())
+			self.mainWidget.dailySoldProduct.save()
+		except Exception as e:
+			log.error(f'Setting of app is not written properly on a disc. Exception is {e} ')
 
-		#self.settings.setValue('productDialogSize', self.mainWidget.productDialog.size())
-		self.settings.setValue('oldProductDialogSize', self.mainWidget.oldProductDialog.size())
-
-		self.mainWidget.dailySoldProduct.save()
-
-		self.settings.setValue('date', self.__date.toordinal())
-
-		# save the product model before close app
-		self.settings.setValue('filePaths', self.filePath().json())
 		try:
 			self.mainWidget.productModel.save()
 		except InvalidProductModelException as e:
@@ -133,6 +142,24 @@ class MainWindow(QtWidgets.QMainWindow, PreferencesService, FilePathService):
 
 
 	def closeEvent(self, event):
+
+		# check that there is a not empty model in bread crumb item data, if there is a non empty model, show a question
+		breadCrumbItemCount = self.mainWidget.breadCrumbWidget.count()
+		exists = False
+		for i in range(breadCrumbItemCount):
+			itemData = self.mainWidget.breadCrumbWidget.itemData(i)
+			if itemData.model().isEmpty() is False:
+				exists = True
+				break
+
+		# if there is non empty model in bread crumb item data, show a question about are you sure.
+		if exists is True:
+			action = QtWidgets.QMessageBox.question(self, 'Are you sure?', 'All products will be deleted',
+													QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+			if action == QtWidgets.QMessageBox.No:
+				event.ignore()
+				return
+
 		self.cleanupBeforeClose()
 		super(MainWindow, self).closeEvent(event)
 
