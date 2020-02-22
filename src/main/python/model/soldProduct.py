@@ -72,17 +72,26 @@ class SoldProduct(object):
 
 class WeighableSoldProduct(SoldProduct):
 
-	def __init__(self, product):
-		amount = WeighableSoldProduct.__amount(product.id())
+	def __init__(self, product, amount):
 		super(WeighableSoldProduct, self).__init__(product, amount)
 		self.setUnit('gr')
 
 
+	def totalPrice(self):
+		totalPrice = super(WeighableSoldProduct, self).totalPrice()
+		return round(totalPrice / 1000.0, 2)
+
+
 	@classmethod
-	def __amount(cls, barcode):
+	def amountFromBarcode(cls, barcode):
 		amountInString = barcode[-5:-1]
 		if amountInString.isdigit():
 			amount = int(amountInString)
 		else:
 			amount = 1
 		return amount
+
+
+if __name__ == '__main__':
+	a = '2700067005670'
+	print(WeighableSoldProduct.amount(a))

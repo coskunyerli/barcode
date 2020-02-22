@@ -108,6 +108,10 @@ class SoldProductModel(QtCore.QAbstractTableModel):
 		return len(self.__productList)
 
 
+	def isEmpty(self):
+		return self.rowCount() <= 0
+
+
 	def data(self, index, role = QtCore.Qt.DisplayRole):
 		if index.isValid() is False:
 			return None
