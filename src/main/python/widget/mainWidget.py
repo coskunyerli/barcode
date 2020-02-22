@@ -132,11 +132,6 @@ class MainWidget(QtWidgets.QWidget):
 		self.productModel.setPath(path)
 		self.dailySoldProduct = DailyReceiptModel()
 
-		# self.newProductShortcut = QtWidgets.QShortcut(self)
-		# self.newProductShortcut.setContext(QtCore.Qt.ApplicationShortcut)
-		# self.newProductShortcut.setKey(QtGui.QKeySequence('Ctrl+N'))
-		# self.newProductShortcut.activated.connect(self.showNewProductDialog)
-
 		self.removeProductShortcut = QtWidgets.QShortcut(self.soldTableView)
 		self.removeProductShortcut.setContext(QtCore.Qt.WidgetShortcut)
 		self.removeProductShortcut.setKey(QtGui.QKeySequence(QtCore.Qt.Key_Delete))
@@ -162,44 +157,58 @@ class MainWidget(QtWidgets.QWidget):
 		self.addProductToDialySoldProductShortcut.setKey(QtGui.QKeySequence(QtCore.Qt.Key_F8))
 		self.addProductToDialySoldProductShortcut.activated.connect(self.addProductToDialySoldProduct)
 
-		self.oldProductDialog = OldReceiptDialog(self)
-		oldProductStyleSheet = core.fbs.qss('soldProductDialog.qss')
-		if oldProductStyleSheet:
-			self.oldProductDialog.setStyleSheet(oldProductStyleSheet)
-		else:
-			log.warning('soldProductDialog.qss is not loaded successfully')
-		self.productAddDialog = ProductAddDialog(self.productModel, self)
-		productAddDialogStyleSheet = core.fbs.qss('editProductDialog.qss')
-
-		if productAddDialogStyleSheet:
-			self.productAddDialog.setStyleSheet(productAddDialogStyleSheet)
-		else:
-			log.warning('editProductDialog.qss is not loaded successfully')
-
 		self.showPriceDialogShortcut = QtWidgets.QShortcut(self)
 		self.showPriceDialogShortcut.setContext(QtCore.Qt.ApplicationShortcut)
 		self.showPriceDialogShortcut.setKey(QtGui.QKeySequence(QtCore.Qt.Key_F4))
-		self.showPriceDialogShortcut.activated.connect(self.__showPriceDialog)
+		self.showPriceDialogShortcut.activated.connect(self.showPriceDialog)
 
 		self.editProductShortcut = QtWidgets.QShortcut(self)
 		self.editProductShortcut.setContext(QtCore.Qt.ApplicationShortcut)
 		self.editProductShortcut.setKey(QtGui.QKeySequence('Alt+S'))
-		self.editProductShortcut.activated.connect(self.addProductProduct)
+		self.editProductShortcut.activated.connect(self.showAddProductProduct)
 
 		self.initSignalsAndSlots()
 		self.initialize()
 
 
-	def addProductProduct(self, product = None):
-		self.productAddDialog.setProduct(product)
-		self.productAddDialog.show()
-		self.productAddDialog.raise_()
+	def showAddProductProduct(self, product = None):
+		productAddDialog = ProductAddDialog(self.productModel, self)
+		productAddDialogStyleSheet = core.fbs.qss('editProductDialog.qss')
+
+		if productAddDialogStyleSheet:
+			productAddDialog.setStyleSheet(productAddDialogStyleSheet)
+		else:
+			log.warning('editProductDialog.qss is not loaded successfully')
+		productAddDialog.setProduct(product)
+		productAddDialog.exec_()
 
 
 	def showProductList(self):
-		self.oldProductDialog.setModel(self.dailySoldProduct)
+		oldProductDialog = OldReceiptDialog(self)
+		oldProductStyleSheet = core.fbs.qss('soldProductDialog.qss')
+		if oldProductStyleSheet:
+			oldProductDialog.setStyleSheet(oldProductStyleSheet)
+		else:
+			log.warning('soldProductDialog.qss is not loaded successfully')
+		oldProductDialog.setModel(self.dailySoldProduct)
 		if self.dailySoldProduct:
-			self.oldProductDialog.show()
+			oldProductDialog.exec_()
+
+
+	def showProductDialog(self):
+		productDialog = ProductListDialog(self.productModel, self)
+		productDialog.exec_()
+		del productDialog
+
+
+	def showPriceDialog(self):
+		priceDialog = PriceDialog(self.productModel, self)
+		styleSheet = core.fbs.qss('priceDialog.qss')
+		if styleSheet:
+			priceDialog.setStyleSheet(styleSheet)
+		else:
+			log.warning(f'Error occurred while loading qss file path is priceDailog.qss')
+		priceDialog.exec_()
 
 
 	def addProductToDialySoldProduct(self):
@@ -278,6 +287,7 @@ class MainWidget(QtWidgets.QWidget):
 
 
 	def __addProductToView(self, barcode):
+
 		if barcode == BarcodeType.CUSTOM:
 			distinct = True
 			product = CustomProduct(self.inputWidgetGroup.price())
@@ -286,7 +296,10 @@ class MainWidget(QtWidgets.QWidget):
 			product = self.productModel.getProductWithBarcode(barcode)
 		if product is not None:
 			if self.productModel.productType(barcode) == ProductType.WEIGHABLE:
-				soldProduct = WeighableSoldProduct(product.copy())
+				copyProduct = product.copy()
+				# eğer bu olursa tartılan ürünler ayrı ayrı davranıyor.
+				# copyProduct.setID(barcode)
+				soldProduct = WeighableSoldProduct(copyProduct, WeighableSoldProduct.amountFromBarcode(barcode))
 			else:
 				soldProduct = SoldProduct(product.copy(), self.inputWidgetGroup.amount())
 			if soldProduct.totalPrice() != 0:
@@ -295,22 +308,6 @@ class MainWidget(QtWidgets.QWidget):
 				Toast.warning('Product Warning', 'Price of product can not be 0')
 		else:
 			Toast.warning('Product Warning', 'Product does not exist')
-
-
-	def showProductDialog(self):
-		productDialog = ProductListDialog(self.productModel, self)
-		productDialog.exec_()
-		del productDialog
-
-
-	def __showPriceDialog(self):
-		priceDialog = PriceDialog(self.productModel, self)
-		styleSheet = core.fbs.qss('priceDialog.qss')
-		if styleSheet:
-			priceDialog.setStyleSheet(styleSheet)
-		else:
-			log.warning(f'Error occurred while loading qss file path is priceDailog.qss')
-		priceDialog.exec_()
 
 
 	def __updateSoldProductModel(self, index):
