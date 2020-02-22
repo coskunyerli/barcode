@@ -1,5 +1,6 @@
 import PySide2.QtWidgets as QtWidgets, PySide2.QtCore as QtCore
 import log
+from model.sizeInfo import SizeInfo
 
 from proxy.searchProductModelProxy import SearchProductModelProxy
 from widget.dialogNameWidget import DialogNameWidget
@@ -7,8 +8,22 @@ from widget.toast import Toast
 
 from fontSize import FontSize
 
+sizeInfo = SizeInfo(None, None)
+
 
 class ProductListDialog(QtWidgets.QDialog):
+
+	@classmethod
+	def setSizeInfo(cls, sizeInfo2):
+		global sizeInfo
+		sizeInfo = sizeInfo2
+
+
+	@classmethod
+	def sizeInfo(cls):
+		return sizeInfo
+
+
 	def __init__(self, model, parent = None):
 		super(ProductListDialog, self).__init__(parent)
 		self.resize(1000, 600)
@@ -78,9 +93,23 @@ class ProductListDialog(QtWidgets.QDialog):
 		model.modelReset.connect(self.modelReset)
 		model.rowsInserted.connect(self.modelReset)
 
+		# update header sizes
+		self.__updateSizes()
+
 
 	def modelReset(self):
 		self.totalProductLabel.setText(str(self.proxyModel.sourceModel().rowCount()))
+
+
+	def closeEvent(self, event):
+		headerView = self.productTableView.horizontalHeader()
+		headerSizes = []
+		for i in range(headerView.count()):
+			headerSizes.append(int(headerView.sectionSize(i)))
+
+		size = self.size()
+		ProductListDialog.setSizeInfo(SizeInfo(size, headerSizes))
+		super(ProductListDialog, self).closeEvent(event)
 
 
 	def __searchTextChanged(self):
@@ -120,4 +149,12 @@ class ProductListDialog(QtWidgets.QDialog):
 
 	def __editProduct(self, index):
 		product = index.data(QtCore.Qt.UserRole)
-		self.parent().addProductProduct(product)
+		self.parent().showAddProductProduct(product)
+
+
+	def __updateSizes(self):
+		if ProductListDialog.sizeInfo() is not None and ProductListDialog.sizeInfo().isValid():
+			self.resize(ProductListDialog.sizeInfo().size)
+			headerView = self.productTableView.horizontalHeader()
+			for i in range(len(ProductListDialog.sizeInfo().headerSizes)):
+				headerView.resizeSection(i, int(ProductListDialog.sizeInfo().headerSizes[i]))

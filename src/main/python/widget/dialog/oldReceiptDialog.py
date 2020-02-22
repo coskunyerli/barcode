@@ -1,12 +1,25 @@
 import PySide2.QtCore as QtCore, PySide2.QtWidgets as QtWidgets, PySide2.QtGui as QtGui
+from model.sizeInfo import SizeInfo
 from widget.dialogNameWidget import DialogNameWidget
 
 from fontSize import FontSize
 
 currentIndex = 0
+sizeInfo = SizeInfo(None, None)
 
 
 class OldReceiptDialog(QtWidgets.QDialog):
+
+	@classmethod
+	def setSizeInfo(cls, sizeInfo2):
+		global sizeInfo
+		sizeInfo = sizeInfo2
+
+
+	@classmethod
+	def sizeInfo(cls):
+		return sizeInfo
+
 
 	def __init__(self, parent = None):
 		super(OldReceiptDialog, self).__init__(parent)
@@ -66,6 +79,8 @@ class OldReceiptDialog(QtWidgets.QDialog):
 
 		self.infoWidgetIndexInfoLineEdit.editingFinished.connect(self.__updateCurrentIndex)
 
+		self.__updateHeaderSizes()
+
 
 	def __updateCurrentIndex(self):
 		index = int(self.infoWidgetIndexInfoLineEdit.text())
@@ -100,6 +115,17 @@ class OldReceiptDialog(QtWidgets.QDialog):
 			super(OldReceiptDialog, self).keyPressEvent(event)
 
 
+	def closeEvent(self, event):
+		headerView = self.soldProductLabelView.horizontalHeader()
+		headerSizes = []
+		for i in range(headerView.count()):
+			headerSizes.append(int(headerView.sectionSize(i)))
+
+		size = self.size()
+		OldReceiptDialog.setSizeInfo(SizeInfo(size, headerSizes))
+		super(OldReceiptDialog, self).closeEvent(event)
+
+
 	def __update(self):
 		index = currentIndex
 		if self.__dailySoldProduct:
@@ -117,3 +143,12 @@ class OldReceiptDialog(QtWidgets.QDialog):
 			self.priceLabel.setFixedWidth(width + 20)
 
 			self.dateInfoLabel.setText(model.date().strftime("%H:%M:%S, %d/%m/%Y"))
+			self.__updateHeaderSizes()
+
+
+	def __updateHeaderSizes(self):
+		if OldReceiptDialog.sizeInfo() is not None and OldReceiptDialog.sizeInfo().isValid():
+			self.resize(OldReceiptDialog.sizeInfo().size)
+			headerView = self.soldProductLabelView.horizontalHeader()
+			for i in range(len(self.sizeInfo().headerSizes)):
+				headerView.resizeSection(i, int(self.sizeInfo().headerSizes[i]))
