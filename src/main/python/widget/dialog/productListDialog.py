@@ -1,8 +1,9 @@
-import PySide2.QtWidgets as QtWidgets, PySide2.QtCore as QtCore
+import PySide2.QtWidgets as QtWidgets, PySide2.QtCore as QtCore, PySide2.QtGui as QtGui
 import log
 from model.sizeInfo import SizeInfo
 
 from proxy.searchProductModelProxy import SearchProductModelProxy
+from service.databaseService import DatabaseService
 from widget.dialogNameWidget import DialogNameWidget
 from widget.toast import Toast
 
@@ -11,7 +12,7 @@ from fontSize import FontSize
 sizeInfo = SizeInfo(None, None)
 
 
-class ProductListDialog(QtWidgets.QDialog):
+class ProductListDialog(QtWidgets.QDialog, DatabaseService):
 
 	@classmethod
 	def setSizeInfo(cls, sizeInfo2):
@@ -93,6 +94,10 @@ class ProductListDialog(QtWidgets.QDialog):
 		model.modelReset.connect(self.modelReset)
 		model.rowsInserted.connect(self.modelReset)
 
+		self.deleteShortCut = QtWidgets.QShortcut(self)
+		self.deleteShortCut.setKey(QtGui.QKeySequence.Delete)
+		self.deleteShortCut.activated.connect(self.remove)
+
 		# update header sizes
 		self.__updateSizes()
 
@@ -122,8 +127,8 @@ class ProductListDialog(QtWidgets.QDialog):
 
 	def __showPopup(self, pos):
 		globalPos = self.productTableView.mapToGlobal(pos)
-		index = self.productTableView.indexAt(pos)
-		if index.isValid():
+		indices = self.productTableView.selectedIndexes()
+		if indices:
 			menu = QtWidgets.QMenu(self)
 			removeAction = menu.addAction('Remove')
 			editAction = menu.addAction('Edit')
@@ -133,17 +138,38 @@ class ProductListDialog(QtWidgets.QDialog):
 				messageBox = QtWidgets.QMessageBox.question(self, 'Delete Product', 'Are you sure?',
 															QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
 				if messageBox == QtWidgets.QMessageBox.Yes:
-					self.__remove(index)
+					self.__remove(indices)
 			elif action == editAction:
+				index = self.productTableView.currentIndex()
 				self.__editProduct(index)
 
 
-	def __remove(self, index):
+	def remove(self):
+		# get selected indexes
+		indices = self.productTableView.selectedIndexes()
+		if indices:
+			# if indexes exist, remove it
+			messageBox = QtWidgets.QMessageBox.question(self, 'Delete Product', 'Are you sure?',
+														QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+			if messageBox == QtWidgets.QMessageBox.Yes:
+				self.__remove(indices)
+
+
+	def __remove(self, indices):
 		try:
-			self.proxyModel.sourceModel().removeProduct(self.proxyModel.mapToSource(index))
+			indices = sorted(list(filter(lambda index: index.column() == 0, indices)), key = lambda index: index.row())
+
+			barcodeList = list(
+					filter(lambda barcode: barcode, map(lambda index: index.data(), indices)))
 			self.currentProductNumberLabel.setText(str(self.proxyModel.rowCount()))
+
+			for productIndex in indices:
+				product = productIndex.data(QtCore.Qt.UserRole)
+				self.databaseService().delete(product)
+			self.databaseService().commit()
+			self.proxyModel.sourceModel().removeProductWithBarcode(barcodeList)
 		except Exception as e:
-			log.error(f'Product {index} is not deleted in product model. Exception is {e}')
+			log.error(f'Product barcode list {indices} is not deleted in product model. Exception is {e}')
 			Toast.error('Product Deleting Error', 'Product is not deleted successfully')
 
 
