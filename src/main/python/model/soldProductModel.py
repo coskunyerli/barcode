@@ -19,6 +19,19 @@ class SoldProductModel(QtCore.QAbstractTableModel):
 		self.__productModel = productModel
 		if self.__productModel is not None:
 			self.__productModel.dataChanged.connect(self.__updateProductItems)
+			self.__productModel.rowsAboutToBeRemoved.connect(self.__updateProductItemList)
+
+
+	def __updateProductItemList(self, parent, first, last):
+		if self.__productModel is not None:
+			removedProductIndex = self.__productModel.index(first, 0, parent)
+			removedProduct = removedProductIndex.data(QtCore.Qt.UserRole)
+			soldProduct = static.first_(lambda sProduct: sProduct.id() == removedProduct.id(),
+										self.__productList)
+
+			if soldProduct is not None:
+				index = self.__productList.index(soldProduct)
+				self.pop(index)
 
 
 	def __updateProductItems(self, left, right):
@@ -165,13 +178,6 @@ class SoldProductModel(QtCore.QAbstractTableModel):
 	def dict(self):
 		return {'date': self.__date.timestamp(), 'list': list(map(lambda item: item.dict(), self.__productList)),
 				'totalPrice': self.totalPrice()}
-
-
-	def copy(self):
-		model = SoldProductModel()
-		model.__productList = self.__productList
-		model.__date = self.__date
-		return model
 
 
 	@classmethod
