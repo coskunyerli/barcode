@@ -1,12 +1,46 @@
-class Product(object):
+from model.db.databaseConnectInterface import DatabaseConnector
+from model.db.databaseProduct import DatabaseProduct
+
+
+class Product(DatabaseConnector):
 	def __init__(self, id, name, purchasePrice, sellingPrice, secondSellingPrice, kind, vat):
 		self.__id = id
 		self.__name = name
 		self.__purchasePrice = purchasePrice
 		self.__sellingPrice = sellingPrice
 		self.__secondSellingPrice = secondSellingPrice
-		self.__kind = kind
 		self.__vat = vat
+		self.__kind = kind
+
+		self.__databaseObject = None
+
+
+	# self.__stockLevel = stockLevel
+	# self.__stockType = stockType
+
+
+	def toDatabase(self):
+		if self.__databaseObject is None:
+			databaseProduct = DatabaseProduct(id = self.id(), name = self.name(), purchasePrice = self.purchasePrice(),
+											  sellingPrice = self.sellingPrice(),
+											  secondSellingPrice = self.secondSellingPrice(),
+											  vat = self.valueAddedTax())
+			self.__databaseObject = databaseProduct
+		return self.__databaseObject
+
+
+	@classmethod
+	def fromDatabase(self, databaseObject):
+		product = Product(str(databaseObject.id), databaseObject.name, databaseObject.purchasePrice,
+						  databaseObject.sellingPrice, databaseObject.secondSellingPrice, None, databaseObject.vat)
+		product.__databaseObject = databaseObject
+		return product
+
+
+	@classmethod
+	def getClass(cls):
+		return DatabaseProduct
+
 
 	def dict(self):
 		return {'id': self.id(), 'name': self.name(), 'purchasePrice': self.purchasePrice(),
@@ -39,7 +73,7 @@ class Product(object):
 																							 f'price price should be integer or float. Price is {secondSellingPrice}. Type is {type(secondSellingPrice)}'
 
 		assert isinstance(vat, int), f'Value-added-text of product should be integer. Vat is {vat}. Type is {type(vat)}'
-		assert isinstance(kind, str), f'Product kind should be string. Kind is {kind}. Type is {type(type)}'
+		# assert isinstance(kind, str), f'Product kind should be string. Kind is {kind}. Type is {type(kind)}'
 		try:
 			product = Product(**dict)
 			return product
@@ -58,10 +92,6 @@ class Product(object):
 	def __str__(self):
 		return 'Product(%s,%s,%s,%s,%s,%s)' % (
 			self.id(), self.name(), self.purchasePrice(), self.sellingPrice(), self.kind(), self.valueAddedTax())
-
-
-	# self.__stockLevel = stockLevel
-	# self.__stockType = stockType
 
 	def kind(self):
 		return self.__kind
