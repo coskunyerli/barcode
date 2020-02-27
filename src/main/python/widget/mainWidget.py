@@ -1,5 +1,3 @@
-import sys
-
 import PySide2.QtCore as QtCore, PySide2.QtWidgets as QtWidgets, PySide2.QtGui as QtGui
 import core
 import log
@@ -13,7 +11,7 @@ from model.soldProduct import SoldProduct, WeighableSoldProduct
 from model.soldProductModel import SoldProductModel
 
 from widget.breadCrumb import BreadCrumb, ModelBreadCrumbData
-from widget.dialog.oldReceiptDialog import OldReceiptDialog
+from widget.dialog.oldOrderListDialog import OldReceiptDialog
 from widget.dialog.priceDialog import PriceDialog
 from widget.dialog.productAddDialog import ProductAddDialog
 from widget.dialog.productListDialog import ProductListDialog
