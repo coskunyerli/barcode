@@ -2,20 +2,21 @@ import os
 from datetime import date
 import PySide2.QtCore as QtCore, PySide2.QtWidgets as QtWidgets, PySide2.QtGui as QtGui
 import log
-from exceptions import InvalidProductModelException
+from enums import ProductType
 
 from model.dictList import DictList
 from model.sizeInfo import SizeInfo
+from service.databaseService import DatabaseService
 from service.filePathService import FilePathService
 from service.preferencesService import PreferencesService
 from model.product import Product
-from widget.dialog.oldReceiptDialog import OldReceiptDialog
+from widget.dialog.oldOrderListDialog import OldReceiptDialog
 from widget.dialog.productListDialog import ProductListDialog
 from widget.mainWidget import MainWidget
 from widget.toast import Toast
 
 
-class MainWindow(QtWidgets.QMainWindow, PreferencesService, FilePathService):
+class MainWindow(QtWidgets.QMainWindow, PreferencesService, FilePathService, DatabaseService):
 	def __init__(self, parent = None):
 		super(MainWindow, self).__init__(parent)
 		menubar = self.menuBar()
@@ -68,9 +69,6 @@ class MainWindow(QtWidgets.QMainWindow, PreferencesService, FilePathService):
 			for i in range(len(headerSizes)):
 				headerView.resizeSection(i, int(headerSizes[i]))
 
-			# read daily sold product list from disk
-			self.mainWidget.dailySoldProduct.read()
-
 			# read date information
 			date_ = self.settings.value('date')
 			if date_ is not None:
@@ -86,16 +84,8 @@ class MainWindow(QtWidgets.QMainWindow, PreferencesService, FilePathService):
 		except Exception as e:
 			log.error(f'Setting file is not loaded properly while open the app. Exception is {e}')
 
-		try:
-			productModelPath = self.mainWidget.productModel.productModelFilePath()
-			if productModelPath is not None and os.path.exists(productModelPath):
-				self.mainWidget.productModel.load()
-		except InvalidProductModelException as e:
-			log.error(f'Product is not loaded successfully from file, because of model is invalid. Exception is {e}')
-			Toast.error('Product Model Loading Error', 'Product model is not loaded successfully from its file')
-		except Exception as e:
-			log.error(f'Product model is not loaded from its path successfully. {e}')
-			Toast.error('Product Model Loading Error', 'Product model is not loaded successfully from its file')
+		productDictList = self.__dataBaseToProductList()
+		self.mainWidget.productModel.setProductList(productDictList)
 
 
 	def writeSettings(self):
@@ -124,21 +114,8 @@ class MainWindow(QtWidgets.QMainWindow, PreferencesService, FilePathService):
 			self.settings.setValue('date', self.__date.toordinal())
 			# save the product model before close app
 			self.settings.setValue('filePaths', self.filePath().json())
-
-			self.mainWidget.dailySoldProduct.save()
 		except Exception as e:
 			log.error(f'Setting of app is not written properly on a disc. Exception is {e} ')
-
-		try:
-			self.mainWidget.productModel.save()
-		except InvalidProductModelException as e:
-			log.error(f'Product model is not saved successfully before app exit. Exception is {e}')
-			QtWidgets.QMessageBox.information(None, 'Product Model Saved Error',
-											  'Product model is not saved successfully before closing app')
-		except Exception as e:
-			log.error(f'Product model is not saved properly before app is closed. {e}')
-			QtWidgets.QMessageBox.information(None, 'Product Model Saved Error',
-											  'Product model is not saved successfully before closing app')
 
 
 	def closeEvent(self, event):
@@ -182,7 +159,8 @@ class MainWindow(QtWidgets.QMainWindow, PreferencesService, FilePathService):
 				if res is True:
 					self.filePath().setPath('importCsv', os.path.dirname(filename))
 					self.__lastLoadPath = filename
-					Toast.success('CSV Import', 'Importing CSV file is done successfully')
+					Toast.success('CSV Import',
+								  'Importing CSV file is done successfully. Products are added to database')
 				else:
 					Toast.error('CSV Import', 'Invalid file CSV to import')
 		except Exception as e:
@@ -223,24 +201,66 @@ class MainWindow(QtWidgets.QMainWindow, PreferencesService, FilePathService):
 			while not file.atEnd():
 				line = str(file.readLine().data(), encoding = 'ISO 8859-9')
 				line = line.upper().replace('İ', 'I')
+				line = line.replace('\n', '')
 				if title:
 					title = False
 				else:
 					productInList = line.split(',')
 
-					product = Product(productInList[1], productInList[3].strip(), float(productInList[9]),
-									  float(productInList[5]),
-									  float(productInList[11]),
-									  productInList[7], int(productInList[-1]))
-					if product.id() not in productList:
-						productList.setItem(product.id(), product)
+					if self.__checkRowValid(productInList):
 
-			self.mainWidget.productModel.setProductList(productList)
+						product = Product(ProductType.convertWeighableBarcode(productInList[1]),
+										  productInList[3].strip(), float(productInList[9]),
+										  float(productInList[5]),
+										  float(productInList[11]),
+										  productInList[7], int(productInList[-1]))
+						if product.id() not in productList:
+							productList.setItem(product.id(), product)
+
+			# add all products to database
+			productListNotInModel = []
+			for barcode in productList:
+				product = self.mainWidget.productModel.getProductWithBarcode(barcode)
+				if product is None:
+					productListNotInModel.append(barcode)
+
+			if productListNotInModel:
+				for barcode in productListNotInModel:
+					self.databaseService().add(productList[barcode])
+
+				# commit all changes
+
+				self.databaseService().commit()
+
+				productDictList = self.__dataBaseToProductList()
+				self.mainWidget.productModel.setProductList(productDictList)
+			else:
+				log.warning('No new item is added to product model')
 		except Exception as e:
 			log.error(f'Error occurred reading CSV file {filename}. Error is => {e}')
 			return False
 
 		return True
+
+
+	def __checkRowValid(self, row):
+		try:
+			barcode = row[1].strip()
+			if (len(barcode) == 0 or
+					barcode.isdigit() is False or
+					barcode == 0 or
+					barcode == '0' or
+					len(row[3].strip()) == 0 or
+					float(row[9]) < 0 or
+					float(row[5]) < 0 or
+					float(row[11]) < 0 or
+					len(row[7].strip()) == 0 or
+					int(row[-1]) < 0):
+				return False
+			else:
+				return True
+		except:
+			return False
 
 
 	def __exportCSVFile(self, filename):
@@ -261,3 +281,13 @@ class MainWindow(QtWidgets.QMainWindow, PreferencesService, FilePathService):
 			except Exception as e:
 				log.error(f'Error occurred reading CSV file {filename}. Error is => {e}')
 				return False
+
+
+	def __dataBaseToProductList(self):
+		productList = self.databaseService().query(Product).all()
+		productDictList = DictList()
+		for productDatabase in productList:
+			product = Product.fromDatabase(productDatabase)
+			productDictList.setItem(str(product.id()), product)
+
+		return productDictList
