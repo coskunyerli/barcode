@@ -1,24 +1,34 @@
-import json
 import os
-
 import PySide2.QtCore as QtCore
 import log
 from enums import ProductType
-from exceptions import InvalidProductModelException
 
 from model.dictList import DictList
 from model.product import Product
 
 
 class ProductModel(QtCore.QAbstractTableModel):
+	modificationChanged = QtCore.Signal(bool)
+
 
 	def __init__(self, path = None):
 		super(ProductModel, self).__init__()
+		self.__isModified = False
 		self.__path = path
 		self.__isSavedEveryUpdate = False
 		self.__filename = '.product.lst'
 		self.__productList = DictList()
 		self.__headerData = ['Barcode', 'Name', 'Price', 'Purchase Price', 'Second Price', 'Kind', 'Value Added Tax']
+
+
+	def isModified(self):
+		return self.__isModified
+
+
+	def setModified(self, result):
+		if self.isModified() != result:
+			self.__isModified = result
+			self.modificationChanged.emit(self.isModified())
 
 
 	def isSavedEveryUpdate(self):
@@ -48,17 +58,15 @@ class ProductModel(QtCore.QAbstractTableModel):
 		localProduct.setID(localBarcode)
 		self.__productList.setItem(localBarcode, localProduct)
 		self.endInsertRows()
-		if self.isSavedEveryUpdate():
-			self.save()
 
 
-	def removeProduct(self, index):
-		# todo buradn silince bütün yerlerden de silmek lazım
-		self.beginRemoveRows(QtCore.QModelIndex(), index.row(), index.row())
-		self.__productList.pop(index.row())
-		self.endRemoveRows()
-		if self.isSavedEveryUpdate():
-			self.save()
+	def removeProductWithBarcode(self, barcodeList):
+		if barcodeList:
+			for barcode in barcodeList:
+				firstIndex = self.__productList.index(barcode)
+				self.beginRemoveRows(QtCore.QModelIndex(), firstIndex, firstIndex)
+				self.__productList.delete(barcode)
+				self.endRemoveRows()
 
 
 	def columnCount(self, index = QtCore.QModelIndex()):
@@ -112,8 +120,6 @@ class ProductModel(QtCore.QAbstractTableModel):
 		item = self.data(index, QtCore.Qt.UserRole)
 		if func(item) is True:
 			self.dataChanged.emit(index, index)
-			if self.isSavedEveryUpdate():
-				self.save()
 			return True
 		return False
 
@@ -130,21 +136,10 @@ class ProductModel(QtCore.QAbstractTableModel):
 	def setProductList(self, list_):
 		self.beginResetModel()
 		self.__productList = list_
-		self.__preProcessBeforeSetList()
+		self.setModified(True)
 		self.endResetModel()
 
 
-	def __preProcessBeforeSetList(self):
-		productList = self.__productList
-		for key in productList:
-			product = productList[key]
-			localProduct = product
-			localProduct.setID(self.__barcode(product.id()))
-
-		if 0 in productList:
-			del productList[0]
-		if '0' in productList:
-			del productList['0']
 
 
 	def json(self):
@@ -154,36 +149,6 @@ class ProductModel(QtCore.QAbstractTableModel):
 			json_.append(product.dict())
 
 		return json_
-
-
-	def save(self):
-		if self.path() is not None:
-			with open(os.path.join(self.path(), self.__filename), 'w') as file:
-				fileInString = json.dumps(self.json())
-
-				number = file.write(fileInString)
-				if number != len(fileInString):
-					raise InvalidProductModelException(
-							f'Product model is not totally saved into file. path is {self.path()}. '
-							f'Some characters are not written')
-		else:
-			raise InvalidProductModelException('There is not path to save the model')
-
-
-	def load(self):
-		if self.path() is None:
-			raise Exception('There is no path to load')
-		else:
-			with open(os.path.join(self.path(), self.__filename)) as file:
-				fileInString = file.read()
-				if not fileInString:
-					raise InvalidProductModelException(f'Empty product file. Path is {self.path()}')
-				modelInDict = json.loads(fileInString)
-				list_ = ProductModel.fromJson(modelInDict)
-				if list_:
-					self.setProductList(list_)
-				else:
-					raise InvalidProductModelException(f'Product model is not loaded from file. path is {self.path()}.')
 
 
 	@classmethod
