@@ -11,4 +11,4 @@ class DatabaseOrder(Base):
 
 
 	def __repr__(self):
-		return f'DatabaseOrder({self.id}, {self.created_date}, {self.product}, {self.unit}, {self.order})'
+		return f'DatabaseOrder({self.id}, {self.created_date})'
