@@ -1,12 +1,13 @@
 import PySide2.QtWidgets as QtWidgets, PySide2.QtCore as QtCore, PySide2.QtGui as QtGui
 from model.product import Product
+from service.databaseService import DatabaseService
 from widget.dialogNameWidget import DialogNameWidget
 from widget.toast import Toast
 
 from fontSize import FontSize
 
 
-class ProductAddDialog(QtWidgets.QDialog):
+class ProductAddDialog(QtWidgets.QDialog, DatabaseService):
 	def __init__(self, model, parent = None):
 		super(ProductAddDialog, self).__init__(parent)
 		self.setModal(True)
@@ -84,7 +85,7 @@ class ProductAddDialog(QtWidgets.QDialog):
 		#
 
 		self.saveButton = QtWidgets.QPushButton(self)
-		self.saveButton.setText('Save')
+		self.saveButton.setText('Save (Ctrl+S)')
 
 		self.newProductButton = QtWidgets.QPushButton(self.buttonWidget)
 		self.newProductButton.setText('New Product (Ctrl+N)')
@@ -120,11 +121,22 @@ class ProductAddDialog(QtWidgets.QDialog):
 		self.sellingPriceLineEdit.textChanged.connect(self.__updateFirstProfit)
 		self.secondSellingPriceLineEdit.textChanged.connect(self.__updateSecondProfit)
 		self.purchasePriceLineEdit.textChanged.connect(self.__updateProfit)
+		self.__model.rowsInserted.connect(self.__updateDatabaseProducteRow)
+
+
+	def __updateDatabaseProducteRow(self, parent, first, last):
+		productIndex = self.__model.index(first, 0, parent)
+		product = productIndex.data(QtCore.Qt.UserRole)
+		# save the database of added product
+		self.databaseService().add(product)
+		self.databaseService().commit()
 
 
 	def __updateProfit(self):
-		self.__updateFirstProfit(self.sellingPriceLineEdit.text())
-		self.__updateSecondProfit(self.secondSellingPriceLineEdit.text())
+		if self.sellingPriceLineEdit.text():
+			self.__updateFirstProfit(self.sellingPriceLineEdit.text())
+		if self.secondSellingPriceLineEdit.text():
+			self.__updateSecondProfit(self.secondSellingPriceLineEdit.text())
 
 
 	def __updateSecondProfit(self, text):
@@ -174,7 +186,7 @@ class ProductAddDialog(QtWidgets.QDialog):
 		self.secondSellingPriceLineEdit.textChanged.disconnect(self.__updateSecondProfit)
 		self.purchasePriceLineEdit.textChanged.disconnect(self.__updateProfit)
 		if product is not None:
-			self.barcodeLineEdit.setText(product.id())
+			self.barcodeLineEdit.setText(product.barcode())
 			self.productNameLineEdit.setText(product.name())
 			self.purchasePriceLineEdit.setText(str(product.purchasePrice()))
 			self.sellingPriceLineEdit.setText(str(product.sellingPrice()))
@@ -218,7 +230,6 @@ class ProductAddDialog(QtWidgets.QDialog):
 
 
 	def __addOrUpdateProduct(self):
-		# todo ekmek de sorun var farklı bir id ile kaydediyor ona bak bir.
 		try:
 			barcode = self.barcodeLineEdit.text()
 			index = self.__model.getIndexWithBarcode(barcode)
@@ -231,9 +242,9 @@ class ProductAddDialog(QtWidgets.QDialog):
 				purchasePrice = float(self.purchasePriceLineEdit.text())
 				sellingPrice = float(self.sellingPriceLineEdit.text())
 				secondSellingPrice = float(self.secondSellingPriceLineEdit.text())
-				valueTaxAdded = float(self.vatLineEdit.text())
-				product = Product(barcode, name, str(purchasePrice), str(sellingPrice), secondSellingPrice, None,
-								  str(valueTaxAdded))
+				valueTaxAdded = int(self.vatLineEdit.text())
+				product = Product(barcode, name, purchasePrice, sellingPrice, secondSellingPrice, None,
+								  valueTaxAdded)
 				self.__model.addProduct(product)
 				Toast.success('Product Add', 'New product is added successfully')
 		except Exception as e:
@@ -247,7 +258,7 @@ class ProductAddDialog(QtWidgets.QDialog):
 		name = self.productNameLineEdit.text()
 		purchasePrice = float(self.purchasePriceLineEdit.text())
 		sellingPrice = float(self.sellingPriceLineEdit.text())
-		valueTaxAdded = float(self.vatLineEdit.text())
+		valueTaxAdded = int(self.vatLineEdit.text())
 		secondSellingPrice = float(self.secondSellingPriceLineEdit.text())
 
 		product.setName(name)

@@ -162,12 +162,11 @@ class ProductListDialog(QtWidgets.QDialog, DatabaseService):
 			barcodeList = list(
 					filter(lambda barcode: barcode, map(lambda index: index.data(), indices)))
 			self.currentProductNumberLabel.setText(str(self.proxyModel.rowCount()))
-
 			for productIndex in indices:
 				product = productIndex.data(QtCore.Qt.UserRole)
 				self.databaseService().delete(product)
-			self.databaseService().commit()
-			self.proxyModel.sourceModel().removeProductWithBarcode(barcodeList)
+			if self.databaseService().commit() is True:
+				self.proxyModel.sourceModel().removeProductWithBarcode(barcodeList)
 		except Exception as e:
 			log.error(f'Product barcode list {indices} is not deleted in product model. Exception is {e}')
 			Toast.error('Product Deleting Error', 'Product is not deleted successfully')

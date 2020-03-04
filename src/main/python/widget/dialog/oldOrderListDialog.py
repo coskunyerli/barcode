@@ -1,5 +1,8 @@
 import PySide2.QtCore as QtCore, PySide2.QtWidgets as QtWidgets, PySide2.QtGui as QtGui
+from model.order import Order
 from model.sizeInfo import SizeInfo
+from model.soldProductModel import SoldProductModel
+from service.databaseService import DatabaseService
 from widget.dialogNameWidget import DialogNameWidget
 
 from fontSize import FontSize
@@ -8,7 +11,7 @@ currentIndex = 0
 sizeInfo = SizeInfo(None, None)
 
 
-class OldReceiptDialog(QtWidgets.QDialog):
+class OldReceiptDialog(QtWidgets.QDialog, DatabaseService):
 
 	@classmethod
 	def setSizeInfo(cls, sizeInfo2):
@@ -80,6 +83,16 @@ class OldReceiptDialog(QtWidgets.QDialog):
 		self.infoWidgetIndexInfoLineEdit.editingFinished.connect(self.__updateCurrentIndex)
 
 		self.__updateHeaderSizes()
+		orderListDatabase = self.databaseService().query(Order).limit(2000).all()
+		orderList = []
+		for databaseOrder in orderListDatabase:
+			order = Order.fromDatabase(databaseOrder)
+			model = SoldProductModel()
+			model.setOrder(order)
+			model.setReadOnly(True)
+			orderList.append(model)
+
+		self.setModel(orderList)
 
 
 	def __updateCurrentIndex(self):
@@ -142,7 +155,7 @@ class OldReceiptDialog(QtWidgets.QDialog):
 			self.priceLabel.setText(price)
 			self.priceLabel.setFixedWidth(width + 20)
 
-			self.dateInfoLabel.setText(model.date().strftime("%H:%M:%S, %d/%m/%Y"))
+			self.dateInfoLabel.setText(model.date().strftime("%d/%m/%Y, %H:%M:%S"))
 			self.__updateHeaderSizes()
 
 
