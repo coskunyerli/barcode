@@ -7,11 +7,15 @@ import sys
 import core
 import PySide2.QtWidgets as QtWidgets, PySide2.QtGui as QtGui, PySide2.QtCore as QtCore
 from palette import appPalette
+from service import databaseService
+from service.databaseService import DatabaseServiceModel
 from widget.mainWindow import MainWindow
 
 from widget.toast import Toast
 
 if __name__ == '__main__':
+	databaseService._databaseServiceModel = DatabaseServiceModel()
+
 	fbs = BarcodeApplicationContext()  # 1. Instantiate ApplicationContext
 	core.fbs = fbs
 
