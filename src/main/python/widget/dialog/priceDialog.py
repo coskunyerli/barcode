@@ -99,7 +99,7 @@ class PriceDialog(QtWidgets.QDialog):
 		barcode = self.barcodeLabel.text()
 		product = self.__model.getProductWithBarcode(barcode)
 		if product is not None:
-			self.barcodeLabel.setText(product.id())
+			self.barcodeLabel.setText(product.barcode())
 			self.productNameLabel.setText(product.name())
 			totalPrice = product.sellingPrice()
 			price = '%.2f₺' % float(totalPrice)
@@ -118,7 +118,7 @@ class PriceDialog(QtWidgets.QDialog):
 			return
 		product = self.__model.getProductWithBarcode(barcode)
 		if product is not None:
-			self.barcodeLabel.setText(product.id())
+			self.barcodeLabel.setText(product.barcode())
 			self.productNameLabel.setText(product.name())
 			totalPrice = product.sellingPrice()
 			price = '%.2f₺' % float(totalPrice)

@@ -1,14 +1,18 @@
+import datetime
+
 import PySide2.QtCore as QtCore, PySide2.QtWidgets as QtWidgets, PySide2.QtGui as QtGui
 import core
 import log
-
 from enums import BarcodeType, ProductType
+
 from event.eventFilterObject import EventFilterForTableView
-from model.dailyReceiptModel import DailyReceiptModel
+from model.db.databaseOrder import DatabaseOrder
+from model.order import Order
 from model.product import CustomProduct
 from model.productModel import ProductModel
-from model.soldProduct import SoldProduct, WeighableSoldProduct
+from model.soldProduct import WeighableSoldProduct, SoldProduct
 from model.soldProductModel import SoldProductModel
+from service.databaseService import DatabaseService
 
 from widget.breadCrumb import BreadCrumb, ModelBreadCrumbData
 from widget.dialog.oldOrderListDialog import OldReceiptDialog
@@ -18,12 +22,12 @@ from widget.dialog.productListDialog import ProductListDialog
 from widget.footerWidget import FooterWidget
 from widget.inputWidgetGroup import InputWidgetGroup
 from widget.pushButton import PushButton
-from widget.toast import Toast
 
 from fontSize import FontSize
+from widget.toast import Toast
 
 
-class MainWidget(QtWidgets.QWidget):
+class MainWidget(QtWidgets.QWidget, DatabaseService):
 	def __init__(self, parent = None):
 		super(MainWidget, self).__init__(parent)
 		self.mainLayout = QtWidgets.QVBoxLayout(self)
@@ -126,9 +130,6 @@ class MainWidget(QtWidgets.QWidget):
 		self.mainLayout.addWidget(self.footerWidget)
 
 		self.productModel = ProductModel()
-		path = core.fbs.get_resource('product')
-		self.productModel.setPath(path)
-		self.dailySoldProduct = DailyReceiptModel()
 
 		self.removeProductShortcut = QtWidgets.QShortcut(self.soldTableView)
 		self.removeProductShortcut.setContext(QtCore.Qt.WidgetShortcut)
@@ -154,6 +155,11 @@ class MainWidget(QtWidgets.QWidget):
 		self.addProductToDialySoldProductShortcut.setContext(QtCore.Qt.ApplicationShortcut)
 		self.addProductToDialySoldProductShortcut.setKey(QtGui.QKeySequence(QtCore.Qt.Key_F8))
 		self.addProductToDialySoldProductShortcut.activated.connect(self.addProductToDialySoldProduct)
+
+		self.showProductListDialog = QtWidgets.QShortcut(self)
+		self.showProductListDialog.setContext(QtCore.Qt.ApplicationShortcut)
+		self.showProductListDialog.setKey(QtGui.QKeySequence(QtCore.Qt.Key_F9))
+		self.showProductListDialog.activated.connect(self.productDialogButton.click)
 
 		self.showPriceDialogShortcut = QtWidgets.QShortcut(self)
 		self.showPriceDialogShortcut.setContext(QtCore.Qt.ApplicationShortcut)
@@ -188,9 +194,8 @@ class MainWidget(QtWidgets.QWidget):
 			oldProductDialog.setStyleSheet(oldProductStyleSheet)
 		else:
 			log.warning('soldProductDialog.qss is not loaded successfully')
-		oldProductDialog.setModel(self.dailySoldProduct)
-		if self.dailySoldProduct:
-			oldProductDialog.exec_()
+
+		oldProductDialog.exec_()
 
 
 	def showProductDialog(self):
@@ -211,9 +216,19 @@ class MainWidget(QtWidgets.QWidget):
 
 	def addProductToDialySoldProduct(self):
 		model = self.currentSoldProductModel()
-		self.dailySoldProduct.addProduct(model.copy())
-		model.clear()
-		self.dailySoldProduct.save()
+		objectList = []
+		order = model.order()
+		objectList.append(order)
+
+		for soldProduct in order.uncommittedProductList():
+			objectList.append(soldProduct)
+		try:
+			self.databaseService().add_all(objectList)
+			if self.databaseService().commit():
+				model.clear()
+		except Exception as e:
+			log.error(f'Error is occurred while adding order into database. Exception is {e}')
+			Toast.error('Order Error', 'Order is not added successfully')
 
 
 	def pressAsteriks(self):
@@ -285,7 +300,6 @@ class MainWidget(QtWidgets.QWidget):
 
 
 	def __addProductToView(self, barcode):
-
 		if barcode == BarcodeType.CUSTOM:
 			distinct = True
 			product = CustomProduct(self.inputWidgetGroup.price())
@@ -299,8 +313,10 @@ class MainWidget(QtWidgets.QWidget):
 				# copyProduct.setID(barcode)
 				soldProduct = WeighableSoldProduct(copyProduct, WeighableSoldProduct.amountFromBarcode(barcode))
 			else:
+
 				soldProduct = SoldProduct(product.copy(), self.inputWidgetGroup.amount())
 			if soldProduct.totalPrice() != 0:
+				# print(product.copy(), soldProduct, soldProduct.barcode())
 				self.currentSoldProductModel().addProduct(soldProduct, distinct)
 			else:
 				Toast.warning('Product Warning', 'Price of product can not be 0')
@@ -316,6 +332,7 @@ class MainWidget(QtWidgets.QWidget):
 
 	def __addModelToBreadCrumbItem(self, itemData):
 		model = SoldProductModel(self.productModel)
+		model.setOrder(Order(datetime.datetime.now()))
 		model.totalPriceChanged.connect(self.__updateTotalPriceLabel)
 		itemData.setModel(model)
 

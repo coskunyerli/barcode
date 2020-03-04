@@ -3,14 +3,14 @@ from model.db.databaseProduct import DatabaseProduct
 
 
 class Product(DatabaseConnector):
-	def __init__(self, id, name, purchasePrice, sellingPrice, secondSellingPrice, kind, vat):
-		self.__id = id
+	def __init__(self, barcode, name, purchasePrice, sellingPrice, secondSellingPrice, vat, createdDate):
+		self.__barcode = barcode
 		self.__name = name
 		self.__purchasePrice = purchasePrice
 		self.__sellingPrice = sellingPrice
 		self.__secondSellingPrice = secondSellingPrice
 		self.__vat = vat
-		self.__kind = kind
+		self.__createdDate = createdDate
 
 		self.__databaseObject = None
 
@@ -18,10 +18,10 @@ class Product(DatabaseConnector):
 	# self.__stockLevel = stockLevel
 	# self.__stockType = stockType
 
-
 	def toDatabase(self):
 		if self.__databaseObject is None:
-			databaseProduct = DatabaseProduct(id = self.id(), name = self.name(), purchasePrice = self.purchasePrice(),
+			databaseProduct = DatabaseProduct(barcode = self.barcode(), name = self.name(),
+											  purchasePrice = self.purchasePrice(),
 											  sellingPrice = self.sellingPrice(),
 											  secondSellingPrice = self.secondSellingPrice(),
 											  vat = self.valueAddedTax())
@@ -31,8 +31,9 @@ class Product(DatabaseConnector):
 
 	@classmethod
 	def fromDatabase(self, databaseObject):
-		product = Product(str(databaseObject.id), databaseObject.name, databaseObject.purchasePrice,
-						  databaseObject.sellingPrice, databaseObject.secondSellingPrice, None, databaseObject.vat)
+		product = Product(str(databaseObject.barcode), databaseObject.name, databaseObject.purchasePrice,
+						  databaseObject.sellingPrice, databaseObject.secondSellingPrice, databaseObject.vat,
+						  databaseObject.createdDate)
 		product.__databaseObject = databaseObject
 		return product
 
@@ -42,47 +43,9 @@ class Product(DatabaseConnector):
 		return DatabaseProduct
 
 
-	def dict(self):
-		return {'id': self.id(), 'name': self.name(), 'purchasePrice': self.purchasePrice(),
-				'sellingPrice': self.sellingPrice(), 'secondSellingPrice': self.secondSellingPrice(),
-				'kind': self.kind(), 'vat': self.valueAddedTax()}
-
-
-	@classmethod
-	def fromDict(cls, dict):
-
-		id_ = dict.get('id')
-		name = dict.get('name')
-		purchasePrice = dict.get('purchasePrice')
-		sellingPrice = dict.get('purchasePrice')
-		secondSellingPrice = dict.get('secondSellingPrice')
-		kind = dict.get('kind')
-		vat = dict.get('vat')
-
-		assert isinstance(id_, str), f'Product ID should be string. ID is {id_}. Type is {type(id_)}'
-
-		assert name is not None, f'Product name should not be null. Product name is {name}. Type is {type(name)}'
-
-		assert isinstance(purchasePrice, int) or isinstance(purchasePrice, float), f'Product purchase price should be ' \
-																				   f'integer or float. Price is {purchasePrice}. Type is {type(purchasePrice)}'
-
-		assert isinstance(sellingPrice, int) or isinstance(sellingPrice, float), f'Product Selling price should be ' \
-																				 f'integer or float. Price is {sellingPrice}. Type is {type(sellingPrice)}'
-
-		assert isinstance(secondSellingPrice, int) or isinstance(secondSellingPrice, float), f'Product second selling ' \
-																							 f'price price should be integer or float. Price is {secondSellingPrice}. Type is {type(secondSellingPrice)}'
-
-		assert isinstance(vat, int), f'Value-added-text of product should be integer. Vat is {vat}. Type is {type(vat)}'
-		# assert isinstance(kind, str), f'Product kind should be string. Kind is {kind}. Type is {type(kind)}'
-		try:
-			product = Product(**dict)
-			return product
-		except Exception as e:
-			raise Exception(f'Product is not created successfully {dict} is not valid. {e}')
-
-
 	def copy(self):
-		return Product.fromDict(self.dict())
+		return Product(self.barcode(), self.name(), self.purchasePrice(), self.sellingPrice(),
+					   self.secondSellingPrice(), self.valueAddedTax(), self.createdDate())
 
 
 	def __repr__(self):
@@ -91,15 +54,17 @@ class Product(DatabaseConnector):
 
 	def __str__(self):
 		return 'Product(%s,%s,%s,%s,%s,%s)' % (
-			self.id(), self.name(), self.purchasePrice(), self.sellingPrice(), self.kind(), self.valueAddedTax())
-
-	def kind(self):
-		return self.__kind
+			self.barcode(), self.name(), self.purchasePrice(), self.sellingPrice(), self.valueAddedTax(),
+			self.createdDate())
 
 
-	def setKind(self, kind):
-		if self.__kind != kind:
-			self.__kind = kind
+	def createdDate(self):
+		return self.__createdDate
+
+
+	def setCreatedDate(self, kind):
+		if self.__createdDate != kind:
+			self.__createdDate = kind
 			return True
 		else:
 			return False
@@ -145,16 +110,16 @@ class Product(DatabaseConnector):
 			return False
 
 
-	def setID(self, id):
-		if self.__id != id:
-			self.__id = id
+	def setBarcode(self, id):
+		if self.__barcode != id:
+			self.__barcode = id
 			return True
 		else:
 			return False
 
 
-	def id(self):
-		return self.__id
+	def barcode(self):
+		return self.__barcode
 
 
 	def name(self):

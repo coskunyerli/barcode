@@ -1,10 +1,8 @@
 import os
 import PySide2.QtCore as QtCore
-import log
 from enums import ProductType
 
 from model.dictList import DictList
-from model.product import Product
 
 
 class ProductModel(QtCore.QAbstractTableModel):
@@ -14,11 +12,10 @@ class ProductModel(QtCore.QAbstractTableModel):
 	def __init__(self, path = None):
 		super(ProductModel, self).__init__()
 		self.__isModified = False
-		self.__path = path
 		self.__isSavedEveryUpdate = False
-		self.__filename = '.product.lst'
 		self.__productList = DictList()
-		self.__headerData = ['Barcode', 'Name', 'Price', 'Purchase Price', 'Second Price', 'Kind', 'Value Added Tax']
+		self.__headerData = ['Barcode', 'Name', 'Price', 'Purchase Price', 'Second Price', 'Value Added Tax',
+							 'Created Date']
 
 
 	def isModified(self):
@@ -39,23 +36,11 @@ class ProductModel(QtCore.QAbstractTableModel):
 		self.__isSavedEveryUpdate = res
 
 
-	def path(self):
-		return self.__path
-
-
-	def productModelFilePath(self):
-		return os.path.join(self.path(), self.__filename)
-
-
-	def setPath(self, path):
-		self.__path = path
-
-
 	def addProduct(self, product):
 		self.beginInsertRows(QtCore.QModelIndex(), self.rowCount(), self.rowCount())
-		localBarcode = self.__barcode(product.id())
+		localBarcode = self.__barcode(product.barcode)
 		localProduct = product.copy()
-		localProduct.setID(localBarcode)
+		localProduct.setBarcode(localBarcode)
 		self.__productList.setItem(localBarcode, localProduct)
 		self.endInsertRows()
 
@@ -95,9 +80,9 @@ class ProductModel(QtCore.QAbstractTableModel):
 			return None
 		if role == QtCore.Qt.DisplayRole:
 			product = self.__productList[index.row()]
-			data = [product.id(), product.name(), product.sellingPrice(), product.purchasePrice(),
-					product.secondSellingPrice(), product.kind(),
-					product.valueAddedTax()]
+			data = [str(product.barcode()), product.name(), str(product.sellingPrice()), str(product.purchasePrice()),
+					str(product.secondSellingPrice()),
+					str(product.valueAddedTax()), product.createdDate().strftime("%H:%M:%S - %d/%m/%Y")]
 			return data[index.column()]
 		elif role == QtCore.Qt.UserRole:
 			return self.__productList[index.row()]
@@ -140,27 +125,11 @@ class ProductModel(QtCore.QAbstractTableModel):
 		self.endResetModel()
 
 
-
-
-	def json(self):
-		json_ = []
-		for key in self.__productList:
-			product = self.__productList[key]
-			json_.append(product.dict())
-
-		return json_
-
-
-	@classmethod
-	def fromJson(cls, json_):
-		productList = DictList()
-		productInDict = None
-		try:
-			for productInDict in json_:
-				product = Product.fromDict(productInDict)
-				productList.setItem(product.id(), product)
-
-			return productList
-		except Exception as e:
-			log.error(f'Model is not created successfully from dict data. Data is {productInDict}. {e}')
-			return None
+	def importProduct(self, productList):
+		self.beginInsertRows(QtCore.QModelIndex(), self.rowCount(), self.rowCount() + len(productList))
+		for product in productList:
+			localBarcode = self.__barcode(product.barcode())
+			localProduct = product.copy()
+			localProduct.setBarcode(localBarcode)
+			self.__productList.setItem(localBarcode, localProduct)
+		self.endInsertRows()

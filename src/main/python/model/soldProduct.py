@@ -1,14 +1,62 @@
 import datetime
 
+from model.db.databaseConnectInterface import DatabaseConnector
+from model.db.databaseSoldProduct import DatabaseSoldProduct
 from model.product import Product
 
 
-class SoldProduct(object):
+class SoldProduct(DatabaseConnector):
 	def __init__(self, product, amount):
+		self.__id = None
 		self.__product = product
 		self.__amount = amount
 		self.__date = datetime.datetime.now()
 		self.__unit = 'pcs'
+
+		self.__databaseObject = None
+
+		self.__order = None
+
+
+	def toDatabase(self):
+		params = {'amount': self.amount(), 'unit': self.unit(), 'product_barcode': self.barcode(),
+				  'product_name': self.name(), 'product_purchasePrice': self.__product.purchasePrice(),
+				  'product_sellingPrice': self.__product.sellingPrice(),
+				  'product_secondSellingPrice': self.__product.secondSellingPrice(),
+				  'product_createdDate': self.__product.createdDate(), 'product_vat': self.__product.valueAddedTax()}
+		if self.id() is not None:
+			params['id'] = self.id()
+		if self.order() is not None:
+			params['order'] = self.order().toDatabase()
+		databaseObject = DatabaseSoldProduct(**params)
+
+		if self.__databaseObject is None:
+			self.__databaseObject = databaseObject
+		return self.__databaseObject
+
+
+	@classmethod
+	def fromDatabase(cls, db):
+		product = Product(db.product_barcode, db.product_name, db.product_purchasePrice, db.product_sellingPrice,
+						  db.product_secondSellingPrice, db.product_vat, db.product_createdDate)
+		soldProduct = SoldProduct(db.id, db.amount)
+		soldProduct.setUnit(db.unit)
+		soldProduct.__product = product
+		soldProduct.__databaseObject = db
+		return soldProduct
+
+
+	@classmethod
+	def getClass(cls):
+		return DatabaseSoldProduct
+
+
+	def setOrder(self, order):
+		self.__order = order
+
+
+	def order(self):
+		return self.__order
 
 
 	def unit(self):
@@ -24,7 +72,11 @@ class SoldProduct(object):
 
 
 	def id(self):
-		return self.__product.id()
+		return self.__id
+
+
+	def barcode(self):
+		return self.__product.barcode()
 
 
 	def name(self):
@@ -58,16 +110,8 @@ class SoldProduct(object):
 			return False
 
 
-	def dict(self):
-		return {'product': self.__product.dict(), 'amount': self.amount(), 'date': self.__date.timestamp()}
-
-
-	@classmethod
-	def fromDict(self, dict):
-		product = Product.fromDict(dict['product'])
-		soldProduct = SoldProduct(product, dict['amount'])
-		soldProduct.__date = datetime.datetime.fromtimestamp(dict['date'])
-		return soldProduct
+	def __str__(self):
+		return f'SoldProduct({self.id(), self.__product, self.amount(), self.unit(), self.order()})'
 
 
 class WeighableSoldProduct(SoldProduct):

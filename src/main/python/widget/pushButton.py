@@ -14,3 +14,7 @@ class PushButton(QtWidgets.QLabel):
 		if event.button() & QtCore.Qt.LeftButton:
 			self.clicked.emit()
 		super(PushButton, self).mouseReleaseEvent(event)
+
+
+	def click(self):
+		self.clicked.emit()

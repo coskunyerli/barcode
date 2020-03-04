@@ -2,8 +2,7 @@ import datetime
 import PySide2.QtCore as QtCore
 
 import static
-from model.dictList import DictList
-from model.soldProduct import SoldProduct
+from model.order import Order
 
 
 class SoldProductModel(QtCore.QAbstractTableModel):
@@ -12,9 +11,8 @@ class SoldProductModel(QtCore.QAbstractTableModel):
 
 	def __init__(self, productModel = None):
 		super(SoldProductModel, self).__init__()
-		self.__productList = []
+		self.__order = None
 		self.__headerData = ['Barcode', 'Name', 'Amount', 'Price', 'Total Price']
-		self.__date = datetime.datetime.now()
 		self.__readOnly = False
 		self.__productModel = productModel
 		if self.__productModel is not None:
@@ -22,23 +20,28 @@ class SoldProductModel(QtCore.QAbstractTableModel):
 			self.__productModel.rowsAboutToBeRemoved.connect(self.__updateProductItemList)
 
 
+	@property
+	def __productListInOrder(self):
+		return self.order().productList()
+
+
 	def __updateProductItemList(self, parent, first, last):
 		if self.__productModel is not None:
 			removedProductIndex = self.__productModel.index(first, 0, parent)
 			removedProduct = removedProductIndex.data(QtCore.Qt.UserRole)
-			soldProduct = static.first_(lambda sProduct: sProduct.id() == removedProduct.id(),
-										self.__productList)
+			soldProduct = static.first_(lambda sProduct: sProduct.barcode() == removedProduct.barcode(),
+										self.__productListInOrder)
 
 			if soldProduct is not None:
-				index = self.__productList.index(soldProduct)
+				index = self.__productListInOrder.index(soldProduct)
 				self.pop(index)
 
 
 	def __updateProductItems(self, left, right):
 		if self.__productModel is not None:
 			changedProduct = left.data(QtCore.Qt.UserRole)
-			soldProduct = static.first_(lambda sProduct: sProduct.id() == changedProduct.id(),
-										self.__productList)
+			soldProduct = static.first_(lambda sProduct: sProduct.barcode() == changedProduct.barcode(),
+										self.__productListInOrder)
 			if soldProduct is not None:
 				soldProduct.setProduct(changedProduct.copy())
 			self.totalPriceChanged.emit(self.totalPrice())
@@ -49,8 +52,18 @@ class SoldProductModel(QtCore.QAbstractTableModel):
 		self.__readOnly = res
 
 
+	def setOrder(self, order):
+		self.beginResetModel()
+		self.__order = order
+		self.endResetModel()
+
+
+	def order(self):
+		return self.__order
+
+
 	def date(self):
-		return self.__date
+		return self.order().createdDate()
 
 
 	def setProducList(self, productList):
@@ -59,18 +72,19 @@ class SoldProductModel(QtCore.QAbstractTableModel):
 		self.endResetModel()
 
 
-	def addProduct(self, product, distinct = False):
+	def addProduct(self, soldProduct, distinct = False):
 		if distinct is False:
-			currentProduct = self.product(product.id())
+			currentProduct = self.product(soldProduct.barcode())
 			if currentProduct is not None:
-				currentProduct.setAmount(currentProduct.amount() + product.amount())
-				index = self.__productList.index(currentProduct)
+				currentProduct.setAmount(currentProduct.amount() + soldProduct.amount())
+				index = self.__productListInOrder.index(currentProduct)
 				self.dataChanged.emit(index, index)
 				self.totalPriceChanged.emit(self.totalPrice())
 				return
 
 		self.beginInsertRows(QtCore.QModelIndex(), self.rowCount(), self.rowCount())
-		self.__productList.append(product)
+		self.__productListInOrder.append(soldProduct)
+		soldProduct.setOrder(self.order())
 		self.endInsertRows()
 		self.totalPriceChanged.emit(self.totalPrice())
 
@@ -88,7 +102,7 @@ class SoldProductModel(QtCore.QAbstractTableModel):
 				amount = int(data)
 				if amount == 0:
 					return False
-				soldProduct = self.__productList[index.row()]
+				soldProduct = self.__productListInOrder[index.row()]
 				soldProduct.setAmount(int(data))
 				self.totalPriceChanged.emit(self.totalPrice())
 				self.dataChanged.emit(index, index)
@@ -97,18 +111,18 @@ class SoldProductModel(QtCore.QAbstractTableModel):
 
 
 	def removeProduct(self, id):
-		if id in self.__productList:
-			index = self.__productList.keys().index(id)
+		if id in self.__productListInOrder:
+			index = self.__productListInOrder.keys().index(id)
 			self.beginRemoveRows(QtCore.QModelIndex(), index, index)
-			if id in self.__productList:
-				del self.__productList[id]
+			if id in self.__productListInOrder:
+				del self.__productListInOrder[id]
 			self.endRemoveRows()
 		self.totalPriceChanged.emit(self.totalPrice())
 
 
 	def pop(self, index):
 		self.beginRemoveRows(QtCore.QModelIndex(), index, index)
-		self.__productList.pop(index)
+		self.__productListInOrder.pop(index)
 		self.endRemoveRows()
 		self.totalPriceChanged.emit(self.totalPrice())
 
@@ -118,7 +132,7 @@ class SoldProductModel(QtCore.QAbstractTableModel):
 
 
 	def rowCount(self, index = QtCore.QModelIndex()):
-		return len(self.__productList)
+		return len(self.__productListInOrder)
 
 
 	def isEmpty(self):
@@ -129,13 +143,13 @@ class SoldProductModel(QtCore.QAbstractTableModel):
 		if index.isValid() is False:
 			return None
 		if role == QtCore.Qt.DisplayRole:
-			soldProduct = self.__productList[index.row()]
-			data = [soldProduct.id(), soldProduct.name(), f'{soldProduct.amount()} {soldProduct.unit()}',
+			soldProduct = self.__productListInOrder[index.row()]
+			data = [soldProduct.barcode(), soldProduct.name(), f'{soldProduct.amount()} {soldProduct.unit()}',
 					f'{soldProduct.price()} ₺',
 					f'{soldProduct.totalPrice()} ₺']
 			return data[index.column()]
 		elif role == QtCore.Qt.UserRole:
-			return self.__productList[index.row()]
+			return self.__productListInOrder[index.row()]
 		elif role == QtCore.Qt.TextAlignmentRole:
 			if index.column() == 2 or index.column() == 3 or index.column() == 4:
 				return QtCore.Qt.AlignCenter
@@ -154,39 +168,22 @@ class SoldProductModel(QtCore.QAbstractTableModel):
 
 	def clear(self):
 		self.beginResetModel()
-		self.__productList = []
+		self.order().clearUncommitProductList()
 		self.totalPriceChanged.emit(0)
 		self.endResetModel()
 
 
 	def totalPrice(self):
 		totalPrice = 0.0
-		for soldProduct in self.__productList:
+		for soldProduct in self.__productListInOrder:
 			totalPrice += soldProduct.totalPrice()
 		return totalPrice
 
 
-	def product(self, id):
-		product = static.first_(lambda p: p.id() == id, self.__productList)
+	def product(self, barcode):
+		product = static.first_(lambda p: p.barcode() == barcode, self.__productListInOrder)
 		return product
 
 
 	def productList(self):
-		return self.__productList.copy()
-
-
-	def dict(self):
-		return {'date': self.__date.timestamp(), 'list': list(map(lambda item: item.dict(), self.__productList)),
-				'totalPrice': self.totalPrice()}
-
-
-	@classmethod
-	def fromDict(cls, dict):
-		model = SoldProductModel()
-
-		productListInDict = dict.get('list', [])
-		dateInTimeStamp = dict.get('date', datetime.datetime.now().timestamp())
-
-		model.__productList = list(map(lambda itemInDict: SoldProduct.fromDict(itemInDict), productListInDict))
-		model.__date = datetime.datetime.fromtimestamp(dateInTimeStamp)
-		return model
+		return self.__productListInOrder.copy()

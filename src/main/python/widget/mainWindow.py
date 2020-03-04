@@ -1,3 +1,4 @@
+import datetime
 import os
 from datetime import date
 import PySide2.QtCore as QtCore, PySide2.QtWidgets as QtWidgets, PySide2.QtGui as QtGui
@@ -85,6 +86,7 @@ class MainWindow(QtWidgets.QMainWindow, PreferencesService, FilePathService, Dat
 			log.error(f'Setting file is not loaded properly while open the app. Exception is {e}')
 
 		productDictList = self.__dataBaseToProductList()
+
 		self.mainWidget.productModel.setProductList(productDictList)
 
 
@@ -206,34 +208,30 @@ class MainWindow(QtWidgets.QMainWindow, PreferencesService, FilePathService, Dat
 					title = False
 				else:
 					productInList = line.split(',')
-
 					if self.__checkRowValid(productInList):
 
 						product = Product(ProductType.convertWeighableBarcode(productInList[1]),
 										  productInList[3].strip(), float(productInList[9]),
 										  float(productInList[5]),
 										  float(productInList[11]),
-										  productInList[7], int(productInList[-1]))
-						if product.id() not in productList:
-							productList.setItem(product.id(), product)
+										  int(productInList[-1]),
+										  datetime.datetime.now(), )
+						if product.barcode() not in productList:
+							productList.setItem(product.barcode(), product)
 
 			# add all products to database
 			productListNotInModel = []
 			for barcode in productList:
 				product = self.mainWidget.productModel.getProductWithBarcode(barcode)
 				if product is None:
-					productListNotInModel.append(barcode)
-
+					productListNotInModel.append(productList[barcode])
 			if productListNotInModel:
-				for barcode in productListNotInModel:
-					self.databaseService().add(productList[barcode])
+				for product in productListNotInModel:
+					self.databaseService().add(product)
 
 				# commit all changes
-
-				self.databaseService().commit()
-
-				productDictList = self.__dataBaseToProductList()
-				self.mainWidget.productModel.setProductList(productDictList)
+				if self.databaseService().commit() is True:
+					self.mainWidget.productModel.setProductList(self.__dataBaseToProductList())
 			else:
 				log.warning('No new item is added to product model')
 		except Exception as e:
@@ -246,8 +244,7 @@ class MainWindow(QtWidgets.QMainWindow, PreferencesService, FilePathService, Dat
 	def __checkRowValid(self, row):
 		try:
 			barcode = row[1].strip()
-			if (len(barcode) == 0 or
-					barcode.isdigit() is False or
+			if (    barcode.isdigit() is False or
 					barcode == 0 or
 					barcode == '0' or
 					len(row[3].strip()) == 0 or
@@ -284,10 +281,10 @@ class MainWindow(QtWidgets.QMainWindow, PreferencesService, FilePathService, Dat
 
 
 	def __dataBaseToProductList(self):
-		productList = self.databaseService().query(Product).all()
+		productDatabaseList = self.databaseService().query(Product).all()
 		productDictList = DictList()
-		for productDatabase in productList:
-			product = Product.fromDatabase(productDatabase)
-			productDictList.setItem(str(product.id()), product)
+		for databaseProduct in productDatabaseList:
+			product = Product.fromDatabase(databaseProduct)
+			productDictList.setItem(product.barcode(), product)
 
 		return productDictList
