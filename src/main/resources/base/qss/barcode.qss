@@ -94,7 +94,7 @@ color:rgb(10,10,10);
 }
 
 QDialog QPushButton::default{
-    color: rgb(251,251,251);
+    color: black;
 }
 
 QDialog QPushButton::pressed{

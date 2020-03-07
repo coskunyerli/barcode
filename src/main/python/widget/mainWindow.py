@@ -18,273 +18,265 @@ from widget.toast import Toast
 
 
 class MainWindow(QtWidgets.QMainWindow, PreferencesService, FilePathService, DatabaseService):
-	def __init__(self, parent = None):
-		super(MainWindow, self).__init__(parent)
-		menubar = self.menuBar()
-		menu = QtWidgets.QMenu('File')
-		self.importCsvAction = menu.addAction('Import CSV')
-		self.importCsvAction.setShortcut(QtGui.QKeySequence('Ctrl+O'))
-		self.exportCsvAction = menu.addAction('Export CSV')
-		self.exportCsvAction.setShortcut(QtGui.QKeySequence('Ctrl+X'))
-		menubar.addMenu(menu)
-		self.importCsvAction.triggered.connect(self.importCSVFile)
-		self.exportCsvAction.triggered.connect(self.exportCSVFile)
+    def __init__(self, parent=None):
+        super(MainWindow, self).__init__(parent)
+        menubar = self.menuBar()
+        menu = QtWidgets.QMenu('File')
+        self.importCsvAction = menu.addAction('Import CSV')
+        self.importCsvAction.setShortcut(QtGui.QKeySequence('Ctrl+O'))
+        self.exportCsvAction = menu.addAction('Export CSV')
+        self.exportCsvAction.setShortcut(QtGui.QKeySequence('Ctrl+X'))
+        menubar.addMenu(menu)
+        self.importCsvAction.triggered.connect(self.importCSVFile)
+        self.exportCsvAction.triggered.connect(self.exportCSVFile)
 
-		self.mainWidget = MainWidget(self)
-		self.__date = date.today()
-		self.__lastLoadPath = None
-		self.settings = QtCore.QSettings(QtCore.QSettings.IniFormat, QtCore.QSettings.UserScope, "Barcode", "barcode")
-		self.setCentralWidget(self.mainWidget)
+        self.mainWidget = MainWidget(self)
+        self.__date = date.today()
+        self.__lastLoadPath = None
+        self.settings = QtCore.QSettings(QtCore.QSettings.IniFormat, QtCore.QSettings.UserScope, "Barcode", "barcode")
+        self.setCentralWidget(self.mainWidget)
 
-		self.initSignalsAndSlots()
+        self.initSignalsAndSlots()
 
+    def afterReadSettings(self):
+        pass
 
-	def afterReadSettings(self):
-		pass
+    def readSettings(self):
+        try:
+            # read size of window
+            self.resize(self.settings.value("windowSize", QtCore.QSize(1278, 768)))
+            # read header size of dialogs
+            headerSizesDict = self.settings.value('headerSizes', {})
 
+            # set default header size of product list dialog
+            productDialogHeaderSize = headerSizesDict.get('productDialogTableViewHeaderSizes')
+            productDialogSizeInfo = SizeInfo(self.settings.value('productDialogSize', QtCore.QSize(1000, 600)),
+                                             productDialogHeaderSize)
+            if productDialogSizeInfo.isValid():
+                ProductListDialog.setSizeInfo(productDialogSizeInfo)
 
-	def readSettings(self):
-		try:
-			# read size of window
-			self.resize(self.settings.value("windowSize", QtCore.QSize(1278, 768)))
-			# read header size of dialogs
-			headerSizesDict = self.settings.value('headerSizes', {})
+            # set default header size of old product list dialog
+            oldProductDialogHeaderSize = headerSizesDict.get('oldProductDialogTableViewHeaderSizes')
+            oldProductDialogSizeInfo = SizeInfo(self.settings.value('oldProductDialogSize', QtCore.QSize(800, 300)),
+                                                oldProductDialogHeaderSize)
+            if oldProductDialogSizeInfo.isValid():
+                OldReceiptDialog.setSizeInfo(oldProductDialogSizeInfo)
 
-			# set default header size of product list dialog
-			productDialogHeaderSize = headerSizesDict.get('productDialogTableViewHeaderSizes')
-			productDialogSizeInfo = SizeInfo(self.settings.value('productDialogSize', QtCore.QSize(1000, 600)),
-											 productDialogHeaderSize)
-			if productDialogSizeInfo.isValid():
-				ProductListDialog.setSizeInfo(productDialogSizeInfo)
+            # set default header size of sold table view in main widget
+            headerSizes = headerSizesDict.get('soldTableViewHeaderSizes', [])
+            headerView = self.mainWidget.soldTableView.horizontalHeader()
+            for i in range(len(headerSizes)):
+                headerView.resizeSection(i, int(headerSizes[i]))
 
-			# set default header size of old product list dialog
-			oldProductDialogHeaderSize = headerSizesDict.get('oldProductDialogTableViewHeaderSizes')
-			oldProductDialogSizeInfo = SizeInfo(self.settings.value('oldProductDialogSize', QtCore.QSize(800, 300)),
-												oldProductDialogHeaderSize)
-			if oldProductDialogSizeInfo.isValid():
-				OldReceiptDialog.setSizeInfo(oldProductDialogSizeInfo)
+            breadCrumbDefaultNumber = self.settings.value('breadCrumbItemNumber', 3)
+            self.mainWidget.breadCrumbWidget.setDefaultButtonSize(int(breadCrumbDefaultNumber))
+            # read date information
+            date_ = self.settings.value('date')
+            if date_ is not None:
+                self.__date = date.fromordinal(int(date_))
+            else:
+                self.__date = date.today()
 
-			# set default header size of sold table view in main widget
-			headerSizes = headerSizesDict.get('soldTableViewHeaderSizes', [])
-			headerView = self.mainWidget.soldTableView.horizontalHeader()
-			for i in range(len(headerSizes)):
-				headerView.resizeSection(i, int(headerSizes[i]))
+            # read product model from its path
+            json_ = self.settings.value('filePaths')
 
-			# read date information
-			date_ = self.settings.value('date')
-			if date_ is not None:
-				self.__date = date.fromordinal(int(date_))
-			else:
-				self.__date = date.today()
+            if json_ is not None and isinstance(json_, dict):
+                self.filePath().fromJson(json_)
+        except Exception as e:
+            log.error(f'Setting file is not loaded properly while open the app. Exception is {e}')
 
-			# read product model from its path
-			json_ = self.settings.value('filePaths')
+        productDictList = self.__dataBaseToProductList()
 
-			if json_ is not None and isinstance(json_, dict):
-				self.filePath().fromJson(json_)
-		except Exception as e:
-			log.error(f'Setting file is not loaded properly while open the app. Exception is {e}')
+        self.mainWidget.productModel.setProductList(productDictList)
 
-		productDictList = self.__dataBaseToProductList()
+    def writeSettings(self):
+        headerSizes = {}
+        sizes = []
+        try:
+            headerView = self.mainWidget.soldTableView.horizontalHeader()
+            for i in range(headerView.count()):
+                sizes.append(headerView.sectionSize(i))
 
-		self.mainWidget.productModel.setProductList(productDictList)
+            headerSizes['soldTableViewHeaderSizes'] = sizes
 
+            self.settings.setValue('headerSizes', headerSizes)
+            self.settings.setValue('windowSize', self.size())
+            productListDialogSizeInfo = ProductListDialog.sizeInfo()
+            if productListDialogSizeInfo is not None and productListDialogSizeInfo.isValid():
+                self.settings.setValue('productDialogSize', productListDialogSizeInfo.size)
+                headerSizes['productDialogTableViewHeaderSizes'] = productListDialogSizeInfo.headerSizes
 
-	def writeSettings(self):
-		headerSizes = {}
-		sizes = []
-		try:
-			headerView = self.mainWidget.soldTableView.horizontalHeader()
-			for i in range(headerView.count()):
-				sizes.append(headerView.sectionSize(i))
+            oldProductDialogSizeInfo = OldReceiptDialog.sizeInfo()
+            if oldProductDialogSizeInfo is not None and oldProductDialogSizeInfo.isValid():
+                self.settings.setValue('oldProductDialogSize', oldProductDialogSizeInfo.size)
+                headerSizes['oldProductDialogTableViewHeaderSizes'] = oldProductDialogSizeInfo.headerSizes
 
-			headerSizes['soldTableViewHeaderSizes'] = sizes
+            self.settings.setValue('headerSizes', headerSizes)
+            self.settings.setValue('date', self.__date.toordinal())
+            # save the product model before close app
+            self.settings.setValue('filePaths', self.filePath().json())
 
-			self.settings.setValue('headerSizes', headerSizes)
-			self.settings.setValue('windowSize', self.size())
-			productListDialogSizeInfo = ProductListDialog.sizeInfo()
-			if productListDialogSizeInfo is not None and productListDialogSizeInfo.isValid():
-				self.settings.setValue('productDialogSize', productListDialogSizeInfo.size)
-				headerSizes['productDialogTableViewHeaderSizes'] = productListDialogSizeInfo.headerSizes
+            self.settings.setValue('breadCrumbItemNumber',self.mainWidget.breadCrumbWidget.count())
+        except Exception as e:
+            log.error(f'Setting of app is not written properly on a disc. Exception is {e} ')
 
-			oldProductDialogSizeInfo = OldReceiptDialog.sizeInfo()
-			if oldProductDialogSizeInfo is not None and oldProductDialogSizeInfo.isValid():
-				self.settings.setValue('oldProductDialogSize', oldProductDialogSizeInfo.size)
-				headerSizes['oldProductDialogTableViewHeaderSizes'] = oldProductDialogSizeInfo.headerSizes
+    def closeEvent(self, event):
 
-			self.settings.setValue('headerSizes', headerSizes)
-			self.settings.setValue('date', self.__date.toordinal())
-			# save the product model before close app
-			self.settings.setValue('filePaths', self.filePath().json())
-		except Exception as e:
-			log.error(f'Setting of app is not written properly on a disc. Exception is {e} ')
+        # check that there is a not empty model in bread crumb item data, if there is a non empty model, show a question
+        breadCrumbItemCount = self.mainWidget.breadCrumbWidget.count()
+        exists = False
+        for i in range(breadCrumbItemCount):
+            itemData = self.mainWidget.breadCrumbWidget.itemData(i)
+            if itemData.model().isEmpty() is False:
+                exists = True
+                break
 
+        # if there is non empty model in bread crumb item data, show a question about are you sure.
+        if exists is True:
+            action = QtWidgets.QMessageBox.question(self, 'Are you sure?', 'All products will be deleted',
+                                                    QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+            if action == QtWidgets.QMessageBox.No:
+                event.ignore()
+                return
 
-	def closeEvent(self, event):
+        self.cleanupBeforeClose()
+        super(MainWindow, self).closeEvent(event)
 
-		# check that there is a not empty model in bread crumb item data, if there is a non empty model, show a question
-		breadCrumbItemCount = self.mainWidget.breadCrumbWidget.count()
-		exists = False
-		for i in range(breadCrumbItemCount):
-			itemData = self.mainWidget.breadCrumbWidget.itemData(i)
-			if itemData.model().isEmpty() is False:
-				exists = True
-				break
+    def cleanupBeforeClose(self):
+        self.writeSettings()
 
-		# if there is non empty model in bread crumb item data, show a question about are you sure.
-		if exists is True:
-			action = QtWidgets.QMessageBox.question(self, 'Are you sure?', 'All products will be deleted',
-													QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
-			if action == QtWidgets.QMessageBox.No:
-				event.ignore()
-				return
+    def initSignalsAndSlots(self):
+        self.mainWidget.exitButton.clicked.connect(self.close)
 
-		self.cleanupBeforeClose()
-		super(MainWindow, self).closeEvent(event)
+    def importCSVFile(self):
+        filename, res = QtWidgets.QFileDialog.getOpenFileName(self, "Import CSV File",
+                                                              self.filePath().path('importCsv', ''),
+                                                              "CSV Files(*.csv)")
+        try:
+            if res and filename:
+                res = self.__importCSVFile(filename)
+                if res is True:
+                    self.filePath().setPath('importCsv', os.path.dirname(filename))
+                    self.__lastLoadPath = filename
+                    Toast.success('CSV Import',
+                                  'Importing CSV file is done successfully. Products are added to database')
+                else:
+                    Toast.error('CSV Import', 'Invalid file CSV to import')
+        except Exception as e:
+            log.error(f'There is an error importing csv file. File is {filename}. error is {e}')
+            Toast.error('CSV Import', 'Error occurred while importing CSV file')
 
+    def exportCSVFile(self):
+        filename, res = QtWidgets.QFileDialog.getSaveFileName(self, "Export CSV File",
+                                                              self.filePath().path('exportCsv', ''),
+                                                              "CSV Files(*.csv)")
+        try:
+            if res and filename:
+                _, file_extension = os.path.splitext(filename)
 
-	def cleanupBeforeClose(self):
-		self.writeSettings()
+                if file_extension != '.csv':
+                    filename = f'{filename}.csv'
 
+                res = self.__exportCSVFile(filename)
+                if res is True:
+                    self.filePath().setPath('exportCsv', os.path.dirname(filename))
+                    Toast.success('CSV Export', 'Exporting CSV file is done successfully')
+                else:
+                    Toast.error('CSV Export', 'Invalid file CSV to export')
+        except Exception as e:
+            log.error(f'There is an error exporting csv file. File is {filename}. error is {e}')
+            Toast.error('CSV Export', 'Error occurred while exporting CSV file')
 
-	def initSignalsAndSlots(self):
-		self.mainWidget.exitButton.clicked.connect(self.close)
+    def __importCSVFile(self, filename):
+        file = QtCore.QFile(filename)
+        if not file.open(QtCore.QIODevice.ReadOnly):
+            log.error(f'There is invalid file to read {filename}')
+            return False
+        title = True
+        productList = DictList()
+        try:
+            while not file.atEnd():
+                line = str(file.readLine().data(), encoding='ISO 8859-9')
+                line = line.upper().replace('İ', 'I')
+                line = line.replace('\n', '')
+                if title:
+                    title = False
+                else:
+                    productInList = line.split(',')
+                    if self.__checkRowValid(productInList):
 
+                        product = Product(ProductType.convertWeighableBarcode(productInList[1]),
+                                          productInList[3].strip(), float(productInList[9]),
+                                          float(productInList[5]),
+                                          float(productInList[11]),
+                                          int(productInList[-1]),
+                                          datetime.datetime.now(), )
+                        if product.barcode() not in productList:
+                            productList.setItem(product.barcode(), product)
 
-	def importCSVFile(self):
-		filename, res = QtWidgets.QFileDialog.getOpenFileName(self, "Import CSV File",
-															  self.filePath().path('importCsv', ''),
-															  "CSV Files(*.csv)")
-		try:
-			if res and filename:
-				res = self.__importCSVFile(filename)
-				if res is True:
-					self.filePath().setPath('importCsv', os.path.dirname(filename))
-					self.__lastLoadPath = filename
-					Toast.success('CSV Import',
-								  'Importing CSV file is done successfully. Products are added to database')
-				else:
-					Toast.error('CSV Import', 'Invalid file CSV to import')
-		except Exception as e:
-			log.error(f'There is an error importing csv file. File is {filename}. error is {e}')
-			Toast.error('CSV Import', 'Error occurred while importing CSV file')
+            # add all products to database
+            productListNotInModel = []
+            for barcode in productList:
+                product = self.mainWidget.productModel.getProductWithBarcode(barcode)
+                if product is None:
+                    productListNotInModel.append(productList[barcode])
+            if productListNotInModel:
+                for product in productListNotInModel:
+                    self.databaseService().add(product)
 
+                # commit all changes
+                if self.databaseService().commit() is True:
+                    self.mainWidget.productModel.setProductList(self.__dataBaseToProductList())
+            else:
+                log.warning('No new item is added to product model')
+        except Exception as e:
+            log.error(f'Error occurred reading CSV file {filename}. Error is => {e}')
+            return False
 
-	def exportCSVFile(self):
-		filename, res = QtWidgets.QFileDialog.getSaveFileName(self, "Export CSV File",
-															  self.filePath().path('exportCsv', ''),
-															  "CSV Files(*.csv)")
-		try:
-			if res and filename:
-				_, file_extension = os.path.splitext(filename)
+        return True
 
-				if file_extension != '.csv':
-					filename = f'{filename}.csv'
+    def __checkRowValid(self, row):
+        try:
+            barcode = row[1].strip()
+            if (barcode.isdigit() is False or
+                    barcode == 0 or
+                    barcode == '0' or
+                    len(row[3].strip()) == 0 or
+                    float(row[9]) < 0 or
+                    float(row[5]) < 0 or
+                    float(row[11]) < 0 or
+                    len(row[7].strip()) == 0 or
+                    int(row[-1]) < 0):
+                return False
+            else:
+                return True
+        except:
+            return False
 
-				res = self.__exportCSVFile(filename)
-				if res is True:
-					self.filePath().setPath('exportCsv', os.path.dirname(filename))
-					Toast.success('CSV Export', 'Exporting CSV file is done successfully')
-				else:
-					Toast.error('CSV Export', 'Invalid file CSV to export')
-		except Exception as e:
-			log.error(f'There is an error exporting csv file. File is {filename}. error is {e}')
-			Toast.error('CSV Export', 'Error occurred while exporting CSV file')
+    def __exportCSVFile(self, filename):
+        with open(filename, 'w') as file:
+            try:
+                headers = []
+                for headerIndex in range(self.mainWidget.productModel.columnCount()):
+                    headers.append(self.mainWidget.productModel.headerData(headerIndex, QtCore.Qt.Horizontal))
 
+                file.write(f'{",".join(headers)}\n')
+                for i in range(self.mainWidget.productModel.rowCount()):
+                    data = []
+                    for j in range(self.mainWidget.productModel.columnCount()):
+                        index = self.mainWidget.productModel.index(i, j)
+                        data.append(str(index.data()))
+                    file.write(f'{",".join(data)}\n')
+                return True
+            except Exception as e:
+                log.error(f'Error occurred reading CSV file {filename}. Error is => {e}')
+                return False
 
-	def __importCSVFile(self, filename):
-		file = QtCore.QFile(filename)
-		if not file.open(QtCore.QIODevice.ReadOnly):
-			log.error(f'There is invalid file to read {filename}')
-			return False
-		title = True
-		productList = DictList()
-		try:
-			while not file.atEnd():
-				line = str(file.readLine().data(), encoding = 'ISO 8859-9')
-				line = line.upper().replace('İ', 'I')
-				line = line.replace('\n', '')
-				if title:
-					title = False
-				else:
-					productInList = line.split(',')
-					if self.__checkRowValid(productInList):
+    def __dataBaseToProductList(self):
+        productDatabaseList = self.databaseService().query(Product).all()
+        productDictList = DictList()
+        for databaseProduct in productDatabaseList:
+            product = Product.fromDatabase(databaseProduct)
+            productDictList.setItem(product.barcode(), product)
 
-						product = Product(ProductType.convertWeighableBarcode(productInList[1]),
-										  productInList[3].strip(), float(productInList[9]),
-										  float(productInList[5]),
-										  float(productInList[11]),
-										  int(productInList[-1]),
-										  datetime.datetime.now(), )
-						if product.barcode() not in productList:
-							productList.setItem(product.barcode(), product)
-
-			# add all products to database
-			productListNotInModel = []
-			for barcode in productList:
-				product = self.mainWidget.productModel.getProductWithBarcode(barcode)
-				if product is None:
-					productListNotInModel.append(productList[barcode])
-			if productListNotInModel:
-				for product in productListNotInModel:
-					self.databaseService().add(product)
-
-				# commit all changes
-				if self.databaseService().commit() is True:
-					self.mainWidget.productModel.setProductList(self.__dataBaseToProductList())
-			else:
-				log.warning('No new item is added to product model')
-		except Exception as e:
-			log.error(f'Error occurred reading CSV file {filename}. Error is => {e}')
-			return False
-
-		return True
-
-
-	def __checkRowValid(self, row):
-		try:
-			barcode = row[1].strip()
-			if (    barcode.isdigit() is False or
-					barcode == 0 or
-					barcode == '0' or
-					len(row[3].strip()) == 0 or
-					float(row[9]) < 0 or
-					float(row[5]) < 0 or
-					float(row[11]) < 0 or
-					len(row[7].strip()) == 0 or
-					int(row[-1]) < 0):
-				return False
-			else:
-				return True
-		except:
-			return False
-
-
-	def __exportCSVFile(self, filename):
-		with open(filename, 'w') as file:
-			try:
-				headers = []
-				for headerIndex in range(self.mainWidget.productModel.columnCount()):
-					headers.append(self.mainWidget.productModel.headerData(headerIndex, QtCore.Qt.Horizontal))
-
-				file.write(f'{",".join(headers)}\n')
-				for i in range(self.mainWidget.productModel.rowCount()):
-					data = []
-					for j in range(self.mainWidget.productModel.columnCount()):
-						index = self.mainWidget.productModel.index(i, j)
-						data.append(str(index.data()))
-					file.write(f'{",".join(data)}\n')
-				return True
-			except Exception as e:
-				log.error(f'Error occurred reading CSV file {filename}. Error is => {e}')
-				return False
-
-
-	def __dataBaseToProductList(self):
-		productDatabaseList = self.databaseService().query(Product).all()
-		productDictList = DictList()
-		for databaseProduct in productDatabaseList:
-			product = Product.fromDatabase(databaseProduct)
-			productDictList.setItem(product.barcode(), product)
-
-		return productDictList
+        return productDictList

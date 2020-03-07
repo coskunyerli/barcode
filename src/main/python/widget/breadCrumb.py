@@ -123,7 +123,7 @@ class BreadCrumb(QtWidgets.QFrame):
 
 	def setDefaultButtonSize(self, size):
 		self.__defaultButtonSize = size
-		if len(self.buttonList) < self.__defaultButtonSize:
+		if self.count() < self.__defaultButtonSize:
 			for _ in range(self.__defaultButtonSize - len(self.buttonList) + 1):
 				self.addButton(self.__defaultName)
 

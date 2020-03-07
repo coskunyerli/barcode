@@ -7,7 +7,7 @@ from sqlalchemy.orm import sessionmaker
 
 class DatabaseServiceModel(object):
 	def __init__(self):
-		engine = create_engine(f'sqlite:///database.db', echo = True)
+		engine = create_engine(f'sqlite:///database.db', echo = False)
 		Session = sessionmaker(bind = engine)
 		self.session = Session()
 		Base.metadata.create_all(engine)

@@ -4,10 +4,9 @@ import PySide2.QtWidgets as QtWidgets, PySide2.QtGui as QtGui, PySide2.QtCore as
 class HeaderLineEdit(QtWidgets.QLineEdit):
 	editingFinishedChanged = QtCore.Signal()
 
-
 	def __init__(self, parent = None):
 		super(HeaderLineEdit, self).__init__(parent)
-		self.setStyleSheet('color:black;background-color:red')
+		self.setStyleSheet('color:black;background-color:white')
 		self.__oldText = self.text()
 		self.editingFinished.connect(self.__editingFinishedChanged)
 

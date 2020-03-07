@@ -2,7 +2,7 @@ QPushButton{
     color:rgb(40,40,40);
 }
 QPushButton::default{
-    color: rgb(251,251,251);
+    color:black;
 }
 QLineEdit{
     color:black;
