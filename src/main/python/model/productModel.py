@@ -32,16 +32,17 @@ class ProductModel(QtCore.QAbstractTableModel):
 		return self.__isSavedEveryUpdate
 
 
+	def dataChange(self, first, last):
+		self.dataChanged.emit(first, last)
+
+
 	def setSavedEveryUpdate(self, res):
 		self.__isSavedEveryUpdate = res
 
 
 	def addProduct(self, product):
 		self.beginInsertRows(QtCore.QModelIndex(), self.rowCount(), self.rowCount())
-		localBarcode = self.__barcode(product.barcode)
-		localProduct = product.copy()
-		localProduct.setBarcode(localBarcode)
-		self.__productList.setItem(localBarcode, localProduct)
+		self.__productList.setItem(product.barcode(), product)
 		self.endInsertRows()
 
 

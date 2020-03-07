@@ -1,10 +1,12 @@
 import PySide2.QtWidgets as QtWidgets, PySide2.QtCore as QtCore, PySide2.QtGui as QtGui
 import log
+from model.proxyFilterItem import ProxyFilterItem
 from model.sizeInfo import SizeInfo
 
 from proxy.searchProductModelProxy import SearchProductModelProxy
 from service.databaseService import DatabaseService
 from widget.dialogNameWidget import DialogNameWidget
+from widget.editableHeaderView import EditableHeaderView, HeaderWidget
 from widget.toast import Toast
 
 from fontSize import FontSize
@@ -42,6 +44,9 @@ class ProductListDialog(QtWidgets.QDialog, DatabaseService):
 		self.dialogNameLabel.setPointSize(FontSize.dialogNameLabelFontSize())
 		self.dialogNameLabel.setAlignment(QtCore.Qt.AlignCenter)
 
+		self.searchWidget = EditableHeaderView(self)
+
+		self.searchWidget.sectionChanged.connect(self.__searchTextChanged)
 		self.productTableView = QtWidgets.QTableView(self)
 		self.productTableView.setVerticalScrollMode(QtWidgets.QAbstractItemView.ScrollPerItem)
 		self.productTableView.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
@@ -49,16 +54,10 @@ class ProductListDialog(QtWidgets.QDialog, DatabaseService):
 		self.productTableView.customContextMenuRequested.connect(self.__showPopup)
 		self.productTableView.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
 
-		self.searchWidget = QtWidgets.QWidget(self)
-		self.searchWidgetLayout = QtWidgets.QHBoxLayout(self.searchWidget)
-		self.searchWidgetLayout.setContentsMargins(0, 0, 0, 0)
-		self.searchLineEdit = QtWidgets.QLineEdit(self.searchWidget)
-		self.searchLineEdit.setObjectName('barcodeLineEdit')
-		self.searchLineEdit.setPlaceholderText('Search With Name')
+		# self.searchLineEdit = QtWidgets.QLineEdit(self.searchWidget)
+		# self.searchLineEdit.setObjectName('barcodeLineEdit')
+		# self.searchLineEdit.setPlaceholderText('Search With Name')
 
-		self.searchWidgetLayout.addWidget(self.searchLineEdit)
-		self.searchWidgetLayout.addItem(
-				QtWidgets.QSpacerItem(3, 3, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum))
 		self.footerWidget = QtWidgets.QWidget(self)
 		self.footerWidgetLayout = QtWidgets.QHBoxLayout(self.footerWidget)
 		self.footerWidgetLayout.setContentsMargins(0, 0, 0, 0)
@@ -83,13 +82,14 @@ class ProductListDialog(QtWidgets.QDialog, DatabaseService):
 		self.footerWidgetLayout.addItem(spacerItem)
 
 		self.mainLayout.addWidget(self.dialogNameLabel)
-		self.mainLayout.addWidget(self.productTableView)
 		self.mainLayout.addWidget(self.searchWidget)
+		self.mainLayout.addWidget(self.productTableView)
+
 		self.mainLayout.addWidget(self.footerWidget)
 
-		self.searchLineEdit.editingFinished.connect(self.__searchTextChanged)
-
-		self.searchLineEdit.setFocus()
+		# self.searchLineEdit.editingFinished.connect(self.__searchTextChanged)
+		#
+		# self.searchLineEdit.setFocus()
 
 		model.modelReset.connect(self.modelReset)
 		model.rowsInserted.connect(self.modelReset)
@@ -100,6 +100,10 @@ class ProductListDialog(QtWidgets.QDialog, DatabaseService):
 
 		# update header sizes
 		self.__updateSizes()
+
+
+	def test(self, index, text):
+		print(index, text)
 
 
 	def modelReset(self):
@@ -117,12 +121,52 @@ class ProductListDialog(QtWidgets.QDialog, DatabaseService):
 		super(ProductListDialog, self).closeEvent(event)
 
 
-	def __searchTextChanged(self):
-		self.proxyModel.setFilterRegExp(
-				QtCore.QRegExp(self.searchLineEdit.text(), QtCore.Qt.CaseInsensitive, QtCore.QRegExp.FixedString))
-
-		self.currentProductNumberLabel.setText(str(self.proxyModel.rowCount()))
-		self.searchLineEdit.selectAll()
+	def __searchTextChanged(self, index, headerData):
+		text = headerData.text.upper()
+		if index == 0:
+			if text:
+				filterItem = ProxyFilterItem(lambda product: headerData.func(text, product.barcode().upper()))
+				self.proxyModel.addFilter('barcodeSearch', filterItem)
+			else:
+				self.proxyModel.deleteFilter('barcodeSearch')
+		elif index == 1:
+			if text:
+				filterItem = ProxyFilterItem(lambda product: headerData.func(text, product.name().upper()))
+				self.proxyModel.addFilter('barcodeName', filterItem)
+			else:
+				self.proxyModel.deleteFilter('barcodeName')
+		elif index == 2:
+			try:
+				number = float(text)
+				filterItem = ProxyFilterItem(
+						lambda product: headerData.func(round(product.sellingPrice(), 2), round(number, 2)))
+				self.proxyModel.addFilter('sellingPriceSearch', filterItem)
+			except Exception as e:
+				self.proxyModel.deleteFilter('sellingPriceSearch')
+		elif index == 3:
+			try:
+				number = float(text)
+				filterItem = ProxyFilterItem(
+						lambda product: headerData.func(round(product.purchasePrice(), 2), round(number, 2)))
+				self.proxyModel.addFilter('purchasePriceSearch', filterItem)
+			except Exception as e:
+				self.proxyModel.deleteFilter('purchasePriceSearch')
+		elif index == 4:
+			try:
+				number = float(text)
+				filterItem = ProxyFilterItem(
+						lambda product: headerData.func(round(product.secondSellingPrice(), 2), round(number, 2)))
+				self.proxyModel.addFilter('secondSellingPriceSearch', filterItem)
+			except Exception as e:
+				self.proxyModel.deleteFilter('secondSellingPriceSearch')
+		elif index == 5:
+			try:
+				number = float(text)
+				filterItem = ProxyFilterItem(
+					lambda product: headerData.func(round(product.valueAddedTax(), 2), round(number, 2)))
+				self.proxyModel.addFilter('valueTaxAddedSearch', filterItem)
+			except Exception as e:
+				self.proxyModel.deleteFilter('valueTaxAddedSearch')
 
 
 	def __showPopup(self, pos):
@@ -145,6 +189,7 @@ class ProductListDialog(QtWidgets.QDialog, DatabaseService):
 
 
 	def remove(self):
+		print(123123)
 		# get selected indexes
 		indices = self.productTableView.selectedIndexes()
 		if indices:
