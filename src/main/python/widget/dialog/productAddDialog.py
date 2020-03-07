@@ -1,4 +1,7 @@
+import datetime
+
 import PySide2.QtWidgets as QtWidgets, PySide2.QtCore as QtCore, PySide2.QtGui as QtGui
+from enums import ProductType
 from model.product import Product
 from service.databaseService import DatabaseService
 from widget.dialogNameWidget import DialogNameWidget
@@ -243,10 +246,15 @@ class ProductAddDialog(QtWidgets.QDialog, DatabaseService):
 				sellingPrice = float(self.sellingPriceLineEdit.text())
 				secondSellingPrice = float(self.secondSellingPriceLineEdit.text())
 				valueTaxAdded = int(self.vatLineEdit.text())
-				product = Product(barcode, name, purchasePrice, sellingPrice, secondSellingPrice, None,
-								  valueTaxAdded)
-				self.__model.addProduct(product)
-				Toast.success('Product Add', 'New product is added successfully')
+				product = Product(ProductType.convertWeighableBarcode(barcode), name, purchasePrice, sellingPrice,
+								  secondSellingPrice,
+								  valueTaxAdded, datetime.datetime.now())
+				self.databaseService().add(product)
+				if self.databaseService().commit() is True:
+					self.__model.addProduct(product)
+					Toast.success('Product Add', 'New product is added successfully')
+				else:
+					Toast.error('Product Add', 'New product is not added successfully')
 		except Exception as e:
 			print(f'Product is not added or updated successfully. Exception is {e}')
 			Toast.error('Update Error', 'Product is not added or updated successfully')
@@ -266,4 +274,11 @@ class ProductAddDialog(QtWidgets.QDialog, DatabaseService):
 		product.setPurchasePrice(purchasePrice)
 		product.setValueAddedTax(valueTaxAdded)
 		product.setSecondSellingPrice(secondSellingPrice)
-		return True
+		databaseObject = product.toDatabase()
+
+		databaseObject.name = name
+		databaseObject.sellingPrice = sellingPrice
+		databaseObject.secondSellingPrice = secondSellingPrice
+		databaseObject.vat = valueTaxAdded
+		databaseObject.purchasePrice = purchasePrice
+		return self.databaseService().commit()
