@@ -20,11 +20,12 @@ class Product(DatabaseConnector):
 
 	def toDatabase(self):
 		if self.__databaseObject is None:
-			databaseProduct = DatabaseProduct(barcode = self.barcode(), name = self.name(),
+			databaseProduct = DatabaseProduct(barcode = int(self.barcode()), name = self.name(),
 											  purchasePrice = self.purchasePrice(),
 											  sellingPrice = self.sellingPrice(),
 											  secondSellingPrice = self.secondSellingPrice(),
-											  vat = self.valueAddedTax())
+											  vat = self.valueAddedTax(),
+											  createdDate = self.createdDate())
 			self.__databaseObject = databaseProduct
 		return self.__databaseObject
 

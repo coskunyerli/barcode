@@ -2,7 +2,6 @@ import datetime
 
 from model.db.base import Base
 from sqlalchemy import Integer, Column, String, Float, DateTime, func
-from sqlalchemy.orm import relationship
 
 
 class DatabaseProduct(Base):
