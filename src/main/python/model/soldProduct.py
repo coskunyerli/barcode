@@ -19,18 +19,18 @@ class SoldProduct(DatabaseConnector):
 
 
 	def toDatabase(self):
-		params = {'amount': self.amount(), 'unit': self.unit(), 'product_barcode': self.barcode(),
-				  'product_name': self.name(), 'product_purchasePrice': self.__product.purchasePrice(),
-				  'product_sellingPrice': self.__product.sellingPrice(),
-				  'product_secondSellingPrice': self.__product.secondSellingPrice(),
-				  'product_createdDate': self.__product.createdDate(), 'product_vat': self.__product.valueAddedTax()}
-		if self.id() is not None:
-			params['id'] = self.id()
-		if self.order() is not None:
-			params['order'] = self.order().toDatabase()
-		databaseObject = DatabaseSoldProduct(**params)
-
 		if self.__databaseObject is None:
+			params = {'amount': self.amount(), 'unit': self.unit(), 'product_barcode': self.barcode(),
+					  'product_name': self.name(), 'product_purchasePrice': self.__product.purchasePrice(),
+					  'product_sellingPrice': self.__product.sellingPrice(),
+					  'product_secondSellingPrice': self.__product.secondSellingPrice(),
+					  'product_createdDate': self.__product.createdDate(),
+					  'product_vat': self.__product.valueAddedTax()}
+			if self.id() is not None:
+				params['id'] = self.id()
+			if self.order() is not None:
+				params['order'] = self.order().toDatabase()
+			databaseObject = DatabaseSoldProduct(**params)
 			self.__databaseObject = databaseObject
 		return self.__databaseObject
 
