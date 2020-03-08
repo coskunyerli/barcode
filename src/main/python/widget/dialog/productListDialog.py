@@ -33,7 +33,7 @@ class ProductListDialog(QtWidgets.QDialog, DatabaseService):
 		self.setModal(True)
 		self.setWindowTitle('Products')
 		# prent of SearchProductModelProxy should be main parent
-		self.proxyModel = SearchProductModelProxy(parent)
+		self.proxyModel = SearchProductModelProxy()
 		self.proxyModel.setSourceModel(model)
 
 		self.mainLayout = QtWidgets.QVBoxLayout(self)

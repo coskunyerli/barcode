@@ -4,6 +4,7 @@ import PySide2.QtWidgets as QtWidgets, PySide2.QtGui as QtGui, PySide2.QtCore as
 class HeaderLineEdit(QtWidgets.QLineEdit):
 	editingFinishedChanged = QtCore.Signal()
 
+
 	def __init__(self, parent = None):
 		super(HeaderLineEdit, self).__init__(parent)
 		self.setStyleSheet('color:black;background-color:white')
@@ -17,14 +18,6 @@ class HeaderLineEdit(QtWidgets.QLineEdit):
 			self.editingFinishedChanged.emit()
 
 
-	def keyPressEvent(self, event):
-		if event.key() == QtCore.Qt.Key_Escape:
-			self.close()
-			self.setParent(None)
-		else:
-			super(HeaderLineEdit, self).keyPressEvent(event)
-
-
 class HeaderWidget(QtWidgets.QFrame):
 	editingFinishedChanged = QtCore.Signal()
 	compareChanged = QtCore.Signal(object)
@@ -36,10 +29,11 @@ class HeaderWidget(QtWidgets.QFrame):
 		self.horizontalLayout = QtWidgets.QHBoxLayout(self)
 		self.lineEdit = HeaderLineEdit(self)
 		self.combobox = QtWidgets.QComboBox(self)
+		stringModel = QtCore.QStringListModel(['=', '<', '>', '<=', '>='])
+		self.combobox.setModel(stringModel)
 		self.methods = {'=': lambda obj1, obj2: obj1 == obj2, '<': lambda obj1, obj2: obj1 < obj2,
 						'>': lambda obj1, obj2: obj1 > obj2, '<=': lambda obj1, obj2: obj1 <= obj2,
 						'>=': lambda obj1, obj2: obj1 >= obj2}
-		self.combobox.addItems(['=', '<', '>', '<=', '>='])
 		self.combobox.setStyleSheet('color:white')
 		self.combobox.setFixedWidth(60)
 		self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
@@ -50,7 +44,6 @@ class HeaderWidget(QtWidgets.QFrame):
 
 		self.lineEdit.editingFinishedChanged.connect(self.editingFinishedChanged.emit)
 		self.combobox.currentTextChanged.connect(self.__updateCompareMethod)
-
 
 	def __updateCompareMethod(self, text):
 		if self.methods.get(text) is not None:
