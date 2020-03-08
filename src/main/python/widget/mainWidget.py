@@ -15,7 +15,6 @@ from model.soldProductModel import SoldProductModel
 from service.databaseService import DatabaseService
 
 from widget.breadCrumb import BreadCrumb, ModelBreadCrumbData
-from widget.dialog.datePickerDialog import DatePicker
 from widget.dialog.oldOrderListDialog import OldReceiptDialog
 from widget.dialog.priceDialog import PriceDialog
 from widget.dialog.productAddDialog import ProductAddDialog
