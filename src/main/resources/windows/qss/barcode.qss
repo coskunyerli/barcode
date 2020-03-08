@@ -1,0 +1,102 @@
+QTableView {
+    background-color: #404040;
+}
+
+QTableView::item:selected {
+    background-color: rgb(30, 103, 213);
+}
+
+BreadCrumb {
+    background-color: #303030;
+}
+
+QMenuBar{
+background-color:rgb(43,43,43);
+}
+QHeaderView{
+background-color:rgb(50,50,50);
+}
+QHeaderView:section{
+background-color:rgb(80,80,80);
+}
+QTableView QTableCornerButton::section{
+background:#505050;
+border: 1px solid #353535;
+}
+
+
+QScrollArea {
+    border: none;
+    border-bottom: 1px solid #202020;
+    border-top: 1px solid #202020;
+    border-right: 1px solid #252525;
+}
+
+PushButton:hover {
+    background-color: #505050;
+}
+
+PushButton {
+    background-color: #404040;
+    padding: 8px;
+}
+
+
+QLineEdit {
+    color: white;
+}
+
+#barcodeLineEdit{
+    color:black;
+    background-color:white;
+    border-radius:4px;
+    padding-left: 8px;
+}
+
+#totalPriceTextEdit {
+    background-color: #a5a5a5;
+    border-radius: 8px;
+    color: #101010;
+    padding-top:5%;
+    padding-bottom:5%;
+}
+
+#totalPriceLabel {
+    color: #a5a5a5;
+}
+
+#topWidget {
+    background-color: #252525;
+}
+
+QInputDialog QSpinBox {
+    color: black;
+}
+
+InputWidgetGroup QLineEdit {
+    border:0;
+    border-right: 1px solid #101010;
+    background-color: #404040;
+    padding-left: 4px;
+    color: white;
+}
+
+InputWidgetGroup QLineEdit:disabled {
+    background-color: #202020;
+}
+
+#footerWidget {
+    background-color: #252525;
+}
+
+QDialog QPushButton{
+color:rgb(10,10,10);
+}
+
+QDialog QPushButton::default{
+    color: black;
+}
+
+QDialog QPushButton::pressed{
+    color: rgb(251,251,251);
+}

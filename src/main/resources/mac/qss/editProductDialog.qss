@@ -1,0 +1,15 @@
+QPushButton{
+    color:rgb(40,40,40);
+}
+QPushButton::pressed{
+    color:white;
+}
+QPushButton::default{
+    color:white;
+}
+QLineEdit{
+    color:black;
+}
+QLabel{
+    color:rgb(220,220,220)
+}
