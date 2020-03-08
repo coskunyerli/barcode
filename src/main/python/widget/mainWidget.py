@@ -15,6 +15,7 @@ from model.soldProductModel import SoldProductModel
 from service.databaseService import DatabaseService
 
 from widget.breadCrumb import BreadCrumb, ModelBreadCrumbData
+from widget.dialog.datePickerDialog import DatePicker
 from widget.dialog.oldOrderListDialog import OldReceiptDialog
 from widget.dialog.priceDialog import PriceDialog
 from widget.dialog.productAddDialog import ProductAddDialog
@@ -199,10 +200,10 @@ class MainWidget(QtWidgets.QWidget, DatabaseService):
 
 
 	def showProductDialog(self):
+
 		productDialog = ProductListDialog(self.productModel, self)
 		productDialog.exec_()
 		del productDialog
-
 
 	def showPriceDialog(self):
 		priceDialog = PriceDialog(self.productModel, self)

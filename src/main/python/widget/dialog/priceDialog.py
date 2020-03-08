@@ -1,10 +1,7 @@
-import os
-
 import PySide2.QtCore as QtCore, PySide2.QtWidgets as QtWidgets, PySide2.QtGui as QtGui
 from enums import BarcodeType
 from widget.dialogNameWidget import DialogNameWidget
 from widget.toast import Toast
-import core
 
 from fontSize import FontSize
 

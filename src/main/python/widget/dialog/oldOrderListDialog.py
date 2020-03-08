@@ -92,7 +92,11 @@ class OldReceiptDialog(QtWidgets.QDialog, DatabaseService):
 			model.setReadOnly(True)
 			orderList.append(model)
 
+		global currentIndex
+		currentIndex = len(orderList) - 1
+
 		self.setModel(orderList)
+
 
 
 	def __updateCurrentIndex(self):

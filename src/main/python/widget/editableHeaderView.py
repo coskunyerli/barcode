@@ -25,7 +25,7 @@ class HeaderWidget(QtWidgets.QFrame):
 
 	def __init__(self, parent = None):
 		super(HeaderWidget, self).__init__(parent)
-		self.setStyleSheet('background-color:#404040')
+		self.setStyleSheet('background-color:#303030')
 		self.horizontalLayout = QtWidgets.QHBoxLayout(self)
 		self.lineEdit = HeaderLineEdit(self)
 		self.combobox = QtWidgets.QComboBox(self)
@@ -44,6 +44,7 @@ class HeaderWidget(QtWidgets.QFrame):
 
 		self.lineEdit.editingFinishedChanged.connect(self.editingFinishedChanged.emit)
 		self.combobox.currentTextChanged.connect(self.__updateCompareMethod)
+
 
 	def __updateCompareMethod(self, text):
 		if self.methods.get(text) is not None:
@@ -68,14 +69,14 @@ class HeaderData(object):
 		self.text = text
 
 
-class EditableHeaderView(QtWidgets.QWidget):
+class EditableHeaderView(QtWidgets.QFrame):
 	sectionChanged = QtCore.Signal(int, HeaderData)
 
 
 	def __init__(self, parent = None):
 		super(EditableHeaderView, self).__init__(parent)
+		self.setStyleSheet('background-color:#303030')
 		self.horizontalLayout = QtWidgets.QHBoxLayout(self)
-		self.horizontalLayout.setSpacing(1)
 		self.__model = None
 		self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
 
@@ -144,9 +145,29 @@ class EditableHeaderView(QtWidgets.QWidget):
 				lambda: self.sectionChanged.emit(5, HeaderData(self.vatWidget.compare(),
 															   self.vatWidget.text())))
 
+		# self.calenderWidget = QtWidgets.QWidget(self)
+		# self.calenderWidgetLayout = QtWidgets.QHBoxLayout(self.calenderWidget)
+		# self.calenderWidgetLayout.setContentsMargins(0, 0, 0, 0)
+		#
+		# self.calenderLabel = QtWidgets.QLabel(self.calenderWidget)
+		# self.calenderLabel.setText('Created Date')
+		#
+		# self.calenderLineEdit = QtWidgets.QDateTimeEdit(QtCore.QDate(QtCore.QDate.currentDate()), self.calenderWidget)
+		# self.calenderLineEdit.setCalendarPopup(True)
+		# self.calenderLineEdit.setStyleSheet('color:black')
+		#
+		# self.calenderWidgetLayout.addWidget(self.calenderLabel)
+		# self.calenderWidgetLayout.addWidget(self.calenderLineEdit)
+
 		self.horizontalLayout.addWidget(self.barcodeWidget)
 		self.horizontalLayout.addWidget(self.nameWidget)
 		self.horizontalLayout.addWidget(self.priceWidget)
 		self.horizontalLayout.addWidget(self.purchasePriceWidget)
 		self.horizontalLayout.addWidget(self.secondSellingPriceWidget)
 		self.horizontalLayout.addWidget(self.vatWidget)
+		# self.horizontalLayout.addWidget(self.calenderWidget)
+		# self.calenderLineEdit.dateTimeChanged.connect(self.test)
+
+
+	def test(self, dateTime):
+		print(dateTime)
