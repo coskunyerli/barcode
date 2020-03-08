@@ -105,13 +105,14 @@ class BreadCrumb(QtWidgets.QFrame):
 		if buttonIndex is not None:
 			button = self.buttonList[buttonIndex]
 			if button.property('button') and len(self.buttonList) - 1 > 1:
-				menu = QtWidgets.QMenu(self)
+				menu = QtWidgets.QMenu()
 				removeAction = menu.addAction('Remove')
 				action = menu.exec_(globalPos)
 				if action == removeAction:
 					self.mainLayout.removeWidget(button)
 					button.setParent(None)
 					button.hide()
+					button.deleteLater()
 					currentButton = self.__currentButton()
 					self.buttonList.remove(button)
 					if currentButton == button:
@@ -119,6 +120,7 @@ class BreadCrumb(QtWidgets.QFrame):
 					else:
 						index = self.buttonList.index(currentButton)
 						self.setCurrentIndex(index)
+				del menu
 
 
 	def setDefaultButtonSize(self, size):
