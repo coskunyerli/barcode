@@ -168,7 +168,7 @@ class SoldProductModel(QtCore.QAbstractTableModel):
 
 	def clear(self):
 		self.beginResetModel()
-		self.order().clearUncommitProductList()
+		self.__order = Order(datetime.datetime.now())
 		self.totalPriceChanged.emit(0)
 		self.endResetModel()
 
