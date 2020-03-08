@@ -6,7 +6,7 @@ from model.sizeInfo import SizeInfo
 from proxy.searchProductModelProxy import SearchProductModelProxy
 from service.databaseService import DatabaseService
 from widget.dialogNameWidget import DialogNameWidget
-from widget.editableHeaderView import EditableHeaderView, HeaderWidget
+from widget.editableHeaderView import EditableHeaderView
 from widget.toast import Toast
 
 from fontSize import FontSize
@@ -54,9 +54,6 @@ class ProductListDialog(QtWidgets.QDialog, DatabaseService):
 		self.productTableView.customContextMenuRequested.connect(self.__showPopup)
 		self.productTableView.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
 
-		# self.searchLineEdit = QtWidgets.QLineEdit(self.searchWidget)
-		# self.searchLineEdit.setObjectName('barcodeLineEdit')
-		# self.searchLineEdit.setPlaceholderText('Search With Name')
 
 		self.footerWidget = QtWidgets.QWidget(self)
 		self.footerWidgetLayout = QtWidgets.QHBoxLayout(self.footerWidget)
@@ -87,10 +84,6 @@ class ProductListDialog(QtWidgets.QDialog, DatabaseService):
 
 		self.mainLayout.addWidget(self.footerWidget)
 
-		# self.searchLineEdit.editingFinished.connect(self.__searchTextChanged)
-		#
-		# self.searchLineEdit.setFocus()
-
 		model.modelReset.connect(self.modelReset)
 		model.rowsInserted.connect(self.modelReset)
 
@@ -100,10 +93,6 @@ class ProductListDialog(QtWidgets.QDialog, DatabaseService):
 
 		# update header sizes
 		self.__updateSizes()
-
-
-	def test(self, index, text):
-		print(index, text)
 
 
 	def modelReset(self):
@@ -163,7 +152,7 @@ class ProductListDialog(QtWidgets.QDialog, DatabaseService):
 			try:
 				number = float(text)
 				filterItem = ProxyFilterItem(
-					lambda product: headerData.func(round(product.valueAddedTax(), 2), round(number, 2)))
+						lambda product: headerData.func(round(product.valueAddedTax(), 2), round(number, 2)))
 				self.proxyModel.addFilter('valueTaxAddedSearch', filterItem)
 			except Exception as e:
 				self.proxyModel.deleteFilter('valueTaxAddedSearch')
