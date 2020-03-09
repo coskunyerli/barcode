@@ -56,11 +56,11 @@ class MainWidget(QtWidgets.QWidget, DatabaseService):
 		self.productDialogButton.setText('Product')
 		self.productDialogButton.setFixedSize(QtCore.QSize(80, 80))
 
-		self.incomeButton = PushButton(self.topLevelWidget())
+		self.incomeButton = PushButton(self.topWidget)
 		self.incomeButton.setText('Income')
 		self.incomeButton.setFixedSize(QtCore.QSize(80, 80))
 
-		self.exitButton = PushButton(self.topLevelWidget())
+		self.exitButton = PushButton(self.topWidget)
 		self.exitButton.setText('Exit')
 		self.exitButton.setFixedSize(QtCore.QSize(80, 80))
 
