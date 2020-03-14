@@ -6,15 +6,15 @@ import log
 from enums import BarcodeType, ProductType
 
 from event.eventFilterObject import EventFilterForTableView
-from model.db.databaseOrder import DatabaseOrder
 from model.order import Order
-from model.product import CustomProduct
+from model.product import CustomProduct, Product
 from model.productModel import ProductModel
 from model.soldProduct import WeighableSoldProduct, SoldProduct
 from model.soldProductModel import SoldProductModel
 from service.databaseService import DatabaseService
 
 from widget.breadCrumb import BreadCrumb, ModelBreadCrumbData
+from widget.buttonGroupWidget import ButtonGroupWidget, ButtonItemData
 from widget.dialog.oldOrderListDialog import OldReceiptDialog
 from widget.dialog.priceDialog import PriceDialog
 from widget.dialog.productAddDialog import ProductAddDialog
@@ -80,11 +80,29 @@ class MainWidget(QtWidgets.QWidget, DatabaseService):
 		self.centralWidgetLayout.setContentsMargins(0, 0, 0, 0)
 		self.centralWidgetLayout.setSpacing(0)
 
-		self.soldTableView = QtWidgets.QTableView(self.centralWidget)
+		self.tableViewContainer = QtWidgets.QWidget(self.centralWidget)
+		self.tableViewContainerLayout = QtWidgets.QHBoxLayout(self.tableViewContainer)
+		self.tableViewContainerLayout.setContentsMargins(0, 0, 0, 0)
+		self.tableViewContainerLayout.setSpacing(0)
+
+		self.soldTableView = QtWidgets.QTableView(self.tableViewContainer)
 		self.soldTableView.customContextMenuRequested.connect(self.showPopup)
 		self.soldTableView.setFocusPolicy(QtCore.Qt.ClickFocus)
 		self.soldTableView.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
 		self.soldTableView.verticalHeader().setDefaultSectionSize(24)
+
+		sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+		sizePolicy.setHorizontalStretch(1)
+		sizePolicy.setVerticalStretch(1)
+		self.soldTableView.setSizePolicy(sizePolicy)
+
+		self.buttonGroupWidget = ButtonGroupWidget(self.tableViewContainer)
+		self.buttonGroupWidget.clicked.connect(self.addProductFromShortcutButton)
+		self.buttonGroupWidget.createClicked.connect(self.createNewShortcutButton)
+		self.buttonGroupWidget.setStyleSheet(core.fbs.qss('buttonGroupWidget.qss'))
+
+		self.tableViewContainerLayout.addWidget(self.soldTableView)
+		self.tableViewContainerLayout.addWidget(self.buttonGroupWidget)
 
 		eventFilterObject = EventFilterForTableView(self)
 
@@ -93,7 +111,7 @@ class MainWidget(QtWidgets.QWidget, DatabaseService):
 
 		self.inputWidgetGroup = InputWidgetGroup(self.centralWidget)
 
-		self.centralWidgetLayout.addWidget(self.soldTableView)
+		self.centralWidgetLayout.addWidget(self.tableViewContainer)
 		self.centralWidgetLayout.addWidget(self.productWidget)
 
 		self.totalPriceWidget = QtWidgets.QWidget(self)
@@ -175,6 +193,24 @@ class MainWidget(QtWidgets.QWidget, DatabaseService):
 		self.initialize()
 
 
+	def addProductFromShortcutButton(self, row, column, itemData):
+		product = itemData.data
+		if isinstance(product, Product):
+			self.__addProductToView(product.barcode())
+
+
+	def createNewShortcutButton(self):
+		barcode, result = QtWidgets.QInputDialog.getText(self, 'Barcode', 'Enter a valid barcode')
+		if result:
+			product = self.productModel.getProductWithBarcode(barcode)
+			if product is not None:
+				item = ButtonItemData(product.name(), product)
+				self.buttonGroupWidget.addButton(item)
+			else:
+				Toast.warning('Shortcut Warning', 'There is no product given id')
+
+
+
 	def showAddProductProduct(self, product = None):
 		productAddDialog = ProductAddDialog(self.productModel, self)
 		productAddDialogStyleSheet = core.fbs.qss('editProductDialog.qss')
@@ -203,6 +239,7 @@ class MainWidget(QtWidgets.QWidget, DatabaseService):
 		productDialog = ProductListDialog(self.productModel, self)
 		productDialog.exec_()
 		del productDialog
+
 
 	def showPriceDialog(self):
 		priceDialog = PriceDialog(self.productModel, self)
