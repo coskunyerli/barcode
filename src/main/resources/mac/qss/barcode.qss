@@ -89,7 +89,7 @@ InputWidgetGroup QLineEdit:disabled {
     background-color: #252525;
 }
 
-QDialog QPushButton{
+QDialog QPushButton, QDialog QLineEdit{
 color:rgb(10,10,10);
 }
 
