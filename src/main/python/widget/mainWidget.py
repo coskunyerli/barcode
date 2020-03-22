@@ -19,6 +19,7 @@ from widget.dialog.oldOrderListDialog import OldReceiptDialog
 from widget.dialog.priceDialog import PriceDialog
 from widget.dialog.productAddDialog import ProductAddDialog
 from widget.dialog.productListDialog import ProductListDialog
+from widget.dialog.searchSoldProductDialog import SearchSoldProductDialog
 from widget.footerWidget import FooterWidget
 from widget.inputWidgetGroup import InputWidgetGroup
 from widget.pushButton import PushButton
@@ -56,6 +57,10 @@ class MainWidget(QtWidgets.QWidget, DatabaseService):
 		self.productDialogButton.setText('Product')
 		self.productDialogButton.setFixedSize(QtCore.QSize(80, 80))
 
+		self.searchButton = PushButton(self.topWidget)
+		self.searchButton.setText('Search')
+		self.searchButton.setFixedSize(QtCore.QSize(80, 80))
+
 		self.incomeButton = PushButton(self.topWidget)
 		self.incomeButton.setText('Income')
 		self.incomeButton.setFixedSize(QtCore.QSize(80, 80))
@@ -69,6 +74,7 @@ class MainWidget(QtWidgets.QWidget, DatabaseService):
 		self.topWidgetLayout.addItem(spacerItem)
 		self.topWidgetLayout.addWidget(self.priceButtonDialog)
 		self.topWidgetLayout.addWidget(self.productDialogButton)
+		self.topWidgetLayout.addWidget(self.searchButton)
 		self.topWidgetLayout.addWidget(self.incomeButton)
 		self.topWidgetLayout.addWidget(self.exitButton)
 
@@ -210,7 +216,6 @@ class MainWidget(QtWidgets.QWidget, DatabaseService):
 				Toast.warning('Shortcut Warning', 'There is no product given id')
 
 
-
 	def showAddProductProduct(self, product = None):
 		productAddDialog = ProductAddDialog(self.productModel, self)
 		productAddDialogStyleSheet = core.fbs.qss('editProductDialog.qss')
@@ -295,6 +300,7 @@ class MainWidget(QtWidgets.QWidget, DatabaseService):
 
 	def initSignalsAndSlots(self):
 		self.productDialogButton.clicked.connect(self.showProductDialog)
+		self.searchButton.clicked.connect(self.showSearchDialog)
 		self.inputWidgetGroup.barcodeChanged.connect(self.__addProductToView)
 		self.breadCrumbWidget.currentIndexChanged.connect(self.__updateSoldProductModel)
 		self.breadCrumbWidget.itemAdded.connect(self.__addModelToBreadCrumbItem)
@@ -380,3 +386,8 @@ class MainWidget(QtWidgets.QWidget, DatabaseService):
 			return None
 		else:
 			return itemData.model()
+
+
+	def showSearchDialog(self):
+		dialog = SearchSoldProductDialog(self)
+		dialog.exec_()

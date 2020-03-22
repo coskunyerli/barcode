@@ -15,6 +15,7 @@ from model.product import Product
 from widget.buttonGroupWidget import ButtonItemData
 from widget.dialog.oldOrderListDialog import OldReceiptDialog
 from widget.dialog.productListDialog import ProductListDialog
+from widget.dialog.searchSoldProductDialog import SearchSoldProductDialog
 from widget.mainWidget import MainWidget
 from widget.toast import Toast
 
@@ -67,6 +68,13 @@ class MainWindow(QtWidgets.QMainWindow, PreferencesService, FilePathService, Dat
 												oldProductDialogHeaderSize)
 			if oldProductDialogSizeInfo.isValid():
 				OldReceiptDialog.setSizeInfo(oldProductDialogSizeInfo)
+
+			searchSoldProductHeaderSize = headerSizesDict.get('searchSoldProductHeaderSizes')
+			searchSoldProductSizeInfo = SizeInfo(
+					self.settings.value('searchSoldProductSizeInfo', QtCore.QSize(1024, 600)),
+					searchSoldProductHeaderSize)
+			if searchSoldProductSizeInfo.isValid():
+				SearchSoldProductDialog.setSizeInfo(searchSoldProductSizeInfo)
 
 			# set default header size of sold table view in main widget
 			headerSizes = headerSizesDict.get('soldTableViewHeaderSizes', [])
@@ -124,6 +132,11 @@ class MainWindow(QtWidgets.QMainWindow, PreferencesService, FilePathService, Dat
 			if oldProductDialogSizeInfo is not None and oldProductDialogSizeInfo.isValid():
 				self.settings.setValue('oldProductDialogSize', oldProductDialogSizeInfo.size)
 				headerSizes['oldProductDialogTableViewHeaderSizes'] = oldProductDialogSizeInfo.headerSizes
+
+			searchSoldProductSizeInfo = SearchSoldProductDialog.sizeInfo()
+			if searchSoldProductSizeInfo is not None and searchSoldProductSizeInfo.isValid():
+				self.settings.setValue('searchSoldProductSizeInfo', searchSoldProductSizeInfo.size)
+				headerSizes['searchSoldProductHeaderSizes'] = searchSoldProductSizeInfo.headerSizes
 
 			self.settings.setValue('headerSizes', headerSizes)
 			self.settings.setValue('date', self.__date.toordinal())
