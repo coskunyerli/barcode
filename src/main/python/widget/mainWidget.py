@@ -51,20 +51,20 @@ class MainWidget(QtWidgets.QWidget, DatabaseService):
 		self.scrollArea.setWidget(self.breadCrumbWidget)
 
 		self.priceButtonDialog = PushButton(self.topWidget)
-		self.priceButtonDialog.setText('Product Price')
-		self.priceButtonDialog.setFixedSize(QtCore.QSize(100, 80))
+		self.priceButtonDialog.setText('Product Price (F4)')
+		self.priceButtonDialog.setFixedSize(QtCore.QSize(140, 80))
 
 		self.productDialogButton = PushButton(self.topWidget)
-		self.productDialogButton.setText('Product')
-		self.productDialogButton.setFixedSize(QtCore.QSize(80, 80))
+		self.productDialogButton.setText('Product (F9)')
+		self.productDialogButton.setFixedSize(QtCore.QSize(100, 80))
 
 		self.searchButton = PushButton(self.topWidget)
-		self.searchButton.setText('Search')
-		self.searchButton.setFixedSize(QtCore.QSize(80, 80))
+		self.searchButton.setText('Search (F10)')
+		self.searchButton.setFixedSize(QtCore.QSize(100, 80))
 
 		self.incomeButton = PushButton(self.topWidget)
-		self.incomeButton.setText('Income')
-		self.incomeButton.setFixedSize(QtCore.QSize(80, 80))
+		self.incomeButton.setText('Income (F6)')
+		self.incomeButton.setFixedSize(QtCore.QSize(100, 80))
 
 		self.exitButton = PushButton(self.topWidget)
 		self.exitButton.setText('Exit')
@@ -195,6 +195,16 @@ class MainWidget(QtWidgets.QWidget, DatabaseService):
 		self.editProductShortcut.setContext(QtCore.Qt.ApplicationShortcut)
 		self.editProductShortcut.setKey(QtGui.QKeySequence('Alt+S'))
 		self.editProductShortcut.activated.connect(self.showAddProductProduct)
+
+		self.searchButtonDialogShortcut = QtWidgets.QShortcut(self)
+		self.searchButtonDialogShortcut.setContext(QtCore.Qt.ApplicationShortcut)
+		self.searchButtonDialogShortcut.setKey(QtGui.QKeySequence(QtCore.Qt.Key_F10))
+		self.searchButtonDialogShortcut.activated.connect(self.searchButton.click)
+
+		self.incomeDialogShortcut = QtWidgets.QShortcut(self)
+		self.incomeDialogShortcut.setContext(QtCore.Qt.ApplicationShortcut)
+		self.incomeDialogShortcut.setKey(QtGui.QKeySequence(QtCore.Qt.Key_F6))
+		self.incomeDialogShortcut.activated.connect(self.incomeButton.click)
 
 		self.initSignalsAndSlots()
 		self.initialize()
