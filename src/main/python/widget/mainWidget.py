@@ -15,6 +15,7 @@ from service.databaseService import DatabaseService
 
 from widget.breadCrumb import BreadCrumb, ModelBreadCrumbData
 from widget.buttonGroupWidget import ButtonGroupWidget, ButtonItemData
+from widget.dialog.incomeDialog import IncomeDialog
 from widget.dialog.oldOrderListDialog import OldReceiptDialog
 from widget.dialog.priceDialog import PriceDialog
 from widget.dialog.productAddDialog import ProductAddDialog
@@ -305,6 +306,7 @@ class MainWidget(QtWidgets.QWidget, DatabaseService):
 		self.breadCrumbWidget.currentIndexChanged.connect(self.__updateSoldProductModel)
 		self.breadCrumbWidget.itemAdded.connect(self.__addModelToBreadCrumbItem)
 		self.priceButtonDialog.clicked.connect(self.showPriceDialogShortcut.activated.emit)
+		self.incomeButton.clicked.connect(self.showIncomeDialog)
 
 
 	def initialize(self):
@@ -386,6 +388,11 @@ class MainWidget(QtWidgets.QWidget, DatabaseService):
 			return None
 		else:
 			return itemData.model()
+
+
+	def showIncomeDialog(self):
+		dialog = IncomeDialog(self)
+		dialog.exec_()
 
 
 	def showSearchDialog(self):
