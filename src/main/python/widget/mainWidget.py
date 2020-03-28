@@ -66,9 +66,9 @@ class MainWidget(QtWidgets.QWidget, DatabaseService):
 		self.incomeButton.setText('Income (F6)')
 		self.incomeButton.setFixedSize(QtCore.QSize(100, 80))
 
-		self.exitButton = PushButton(self.topWidget)
-		self.exitButton.setText('Exit')
-		self.exitButton.setFixedSize(QtCore.QSize(80, 80))
+		self.printButton = PushButton(self.topWidget)
+		self.printButton.setText('Print')
+		self.printButton.setFixedSize(QtCore.QSize(80, 80))
 
 		self.topWidgetLayout.addWidget(self.scrollArea)
 		spacerItem = QtWidgets.QSpacerItem(8, 8, QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Minimum)
@@ -77,7 +77,7 @@ class MainWidget(QtWidgets.QWidget, DatabaseService):
 		self.topWidgetLayout.addWidget(self.productDialogButton)
 		self.topWidgetLayout.addWidget(self.searchButton)
 		self.topWidgetLayout.addWidget(self.incomeButton)
-		self.topWidgetLayout.addWidget(self.exitButton)
+		self.topWidgetLayout.addWidget(self.printButton)
 
 		self.centralWidget = QtWidgets.QWidget(self)
 		self.centralWidgetLayout = QtWidgets.QHBoxLayout(self.centralWidget)
@@ -133,6 +133,7 @@ class MainWidget(QtWidgets.QWidget, DatabaseService):
 		self.totalPriceTextEdit.setReadOnly(True)
 		self.totalPriceTextEdit.setFocusPolicy(QtCore.Qt.NoFocus)
 		self.totalPriceTextEdit.setAlignment(QtCore.Qt.AlignCenter)
+
 
 		font = self.totalPriceTextEdit.font()
 		font.setPointSize(FontSize.totalPriceFontSize())

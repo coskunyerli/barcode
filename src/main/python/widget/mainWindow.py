@@ -184,8 +184,10 @@ class MainWindow(QtWidgets.QMainWindow, PreferencesService, FilePathService, Dat
 
 
 	def initSignalsAndSlots(self):
-		self.mainWidget.exitButton.clicked.connect(self.close)
+		self.mainWidget.printButton.clicked.connect(self.print)
 
+	def print(self):
+		pass
 
 	def importCSVFile(self):
 		filename, res = QtWidgets.QFileDialog.getOpenFileName(self, "Import CSV File",
