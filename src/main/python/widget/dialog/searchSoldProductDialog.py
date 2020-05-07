@@ -2,6 +2,7 @@ import datetime
 
 import PySide2.QtWidgets as QtWidgets, PySide2.QtCore as QtCore
 from delegate.searchSoldProductDelegate import SearchSoldProductDelegate
+from fontSize import FontSize
 from model.db.databaseOrder import DatabaseOrder
 from model.db.databaseSoldProduct import DatabaseSoldProduct
 from model.order import Order
@@ -10,6 +11,7 @@ from model.sizeInfo import SizeInfo
 from model.soldProductModel import SoldProductModel
 from service.databaseService import DatabaseService
 from sqlalchemy import desc
+from widget.dialogNameWidget import DialogNameWidget
 from widget.soldOrderListWidget import SoldOrderListWidget
 
 
@@ -44,10 +46,14 @@ class SearchSoldProductDialog(QtWidgets.QDialog, DatabaseService):
 		self.verticalLayout = QtWidgets.QVBoxLayout(self)
 		self.verticalLayout.setContentsMargins(0, 0, 0, 0)
 		self.verticalLayout.setSpacing(0)
+
+		self.setWindowTitle('Search Order')
+
 		self.searchWidget = QtWidgets.QWidget(self)
 		self.searchWidgetLayout = QtWidgets.QHBoxLayout(self.searchWidget)
 		self.searchWidgetLayout.setContentsMargins(8, 0, 8, 0)
 		self.searchWidgetLayout.setSpacing(4)
+
 
 		self.lineEdit = QtWidgets.QLineEdit(self.searchWidget)
 		self.lineEdit.setPlaceholderText('Enter a product name to search')

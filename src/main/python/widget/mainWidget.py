@@ -59,8 +59,8 @@ class MainWidget(QtWidgets.QWidget, DatabaseService):
 		self.productDialogButton.setFixedSize(QtCore.QSize(100, 80))
 
 		self.searchButton = PushButton(self.topWidget)
-		self.searchButton.setText('Search (F10)')
-		self.searchButton.setFixedSize(QtCore.QSize(100, 80))
+		self.searchButton.setText('Search Order (F10)')
+		self.searchButton.setFixedSize(QtCore.QSize(140, 80))
 
 		self.incomeButton = PushButton(self.topWidget)
 		self.incomeButton.setText('Income (F6)')
@@ -273,16 +273,16 @@ class MainWidget(QtWidgets.QWidget, DatabaseService):
 		objectList = []
 		order = model.order()
 		objectList.append(order)
-
-		for soldProduct in order.uncommittedProductList():
-			objectList.append(soldProduct)
-		try:
-			self.databaseService().add_all(objectList)
-			if self.databaseService().commit():
-				model.clear()
-		except Exception as e:
-			log.error(f'Error is occurred while adding order into database. Exception is {e}')
-			Toast.error('Order Error', 'Order is not added successfully')
+		if order.isEmpty() is False:
+			for soldProduct in order.uncommittedProductList():
+				objectList.append(soldProduct)
+			try:
+				self.databaseService().add_all(objectList)
+				if self.databaseService().commit():
+					model.clear()
+			except Exception as e:
+				log.error(f'Error is occurred while adding order into database. Exception is {e}')
+				Toast.error('Order Error', 'Order is not added successfully')
 
 
 	def pressAsteriks(self):

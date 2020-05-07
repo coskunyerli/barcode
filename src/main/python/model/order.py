@@ -2,6 +2,7 @@ from model.db.databaseConnectInterface import DatabaseConnector
 from model.db.databaseOrder import DatabaseOrder
 from model.soldProduct import SoldProduct
 
+
 class Order(DatabaseConnector):
 	def __init__(self, createdDate):
 		self.__id = None
@@ -63,6 +64,10 @@ class Order(DatabaseConnector):
 
 	def clearUncommitProductList(self):
 		self.__unCommitSoldProductList.clear()
+
+
+	def isEmpty(self):
+		return len(self.productList()) <= 0
 
 
 	def __str__(self):

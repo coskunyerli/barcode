@@ -2,9 +2,15 @@ import os
 
 from fbs_runtime.application_context import cached_property
 from fbs_runtime.application_context.PySide2 import ApplicationContext
+from model.languagePackage import LanguagePackage
 
 
 class BarcodeApplicationContext(ApplicationContext):
+	def __init__(self):
+		super(BarcodeApplicationContext, self).__init__()
+		self.languagePackage = LanguagePackage()
+
+
 	@cached_property
 	def app(self):
 		result = self._qt_binding.QApplication([])
@@ -20,3 +26,8 @@ class BarcodeApplicationContext(ApplicationContext):
 				return qssString
 		except Exception as e:
 			return None
+
+
+	@property
+	def l(self):
+		return self.languagePackage
